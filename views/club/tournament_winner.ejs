@@ -1,0 +1,23 @@
+<%- include('../layouts/main') %>
+
+<div class="container mt-4">
+    <h1>Ganador del Torneo: <%= tournament.name %></h1>
+
+    <% if (winner) { %>
+        <div class="card text-center p-4">
+            <div class="card-body">
+                <h2 class="card-title display-4 text-success">¡Felicidades!</h2>
+                <p class="card-text lead">El ganador del torneo es:</p>
+                <h3 class="display-3"><strong><%= winner.name %></strong></h3>
+                <p class="text-muted">Con <%= winner.wins %> victorias y una diferencia de sets de <%= winner.setsWon - winner.setsLost %>.</p>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">Aún no se ha determinado un ganador para este torneo, o no hay suficientes partidos registrados.</div>
+    <% } %>
+
+    <div class="mt-4">
+        <a href="/club/tournaments/<%= tournament.id %>/standings" class="btn btn-info me-2">Ver Clasificación Completa</a>
+        <a href="/club/dashboard" class="btn btn-secondary">Volver al Dashboard</a>
+    </div>
+</div>

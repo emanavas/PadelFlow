@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+    <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Panel Club — Administrador</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+        <link rel="stylesheet" href="assets/css/styles.css" />
+      </head>
+      <body>
+        <div class="d-flex" id="adminApp">
+          <nav class="sidebar bg-white border-end">
+            <div class="p-3">
+              <h4>PádelManager</h4>
+              <div class="list-group list-group-flush">
+                <a href="#" class="list-group-item list-group-item-action active" data-section="events">Eventos</a>
+                <a href="#" class="list-group-item list-group-item-action" data-section="inscriptions">Inscripciones</a>
+                <a href="#" class="list-group-item list-group-item-action" data-section="draws">Cuadros</a>
+                <a href="#" class="list-group-item list-group-item-action" data-section="wallshow">Wallshow</a>
+                <a href="#" class="list-group-item list-group-item-action" data-section="settings">Ajustes</a>
+              </div>
+            </div>
+          </nav>
+
+          <main class="flex-grow-1 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2 id="sectionTitle">Eventos</h2>
+              <div>
+                <button class="btn btn-outline-secondary me-2" id="openWallshowBtn"><i class="fas fa-tv me-1"></i>Ver Wallshow</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#eventModal"><i class="fas fa-plus me-1"></i>Crear evento</button>
+              </div>
+            </div>
+
+            <div id="eventsList" class="row g-3">
+              <!-- Eventos renderizados por JS -->
+            </div>
+
+            <!-- Modal Crear/Editar Evento -->
+            <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <form id="eventForm" class="needs-validation" novalidate>
+                    <div class="modal-header">
+                      <h5 class="modal-title">Crear Evento</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Nombre del evento</label>
+                          <input type="text" id="eventName" class="form-control" required />
+                          <div class="invalid-feedback">Nombre requerido.</div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Tipo de torneo</label>
+                          <select id="eventType" class="form-select">
+                            <option value="round-robin">Round Robin</option>
+                            <option value="elimination">Eliminación directa</option>
+                            <option value="liga">Liga</option>
+                            <option value="americana-clasica">Americana Clásica</option>
+                            <option value="americana-rotacion">Americana con Rotación</option>
+                            <option value="americana-canaria">Americana Canaria</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Fecha inicio</label>
+                          <input type="date" id="eventStart" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Plazas</label>
+                          <input type="number" id="eventSlots" class="form-control" value="16" min="2" />
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label">Descripción</label>
+                          <textarea id="eventDesc" class="form-control" rows="3"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                      <button type="submit" class="btn btn-primary">Guardar evento</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel para detalles o logs -->
+            <div class="mt-4">
+              <h5>Actividad reciente</h5>
+              <ul id="activityLog" class="list-group list-group-flush"></ul>
+            </div>
+          </main>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/js/admin.js" type="module"></script>
+      </body>
+    </html>

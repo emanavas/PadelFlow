@@ -1,0 +1,43 @@
+.admin-shell {
+    display: flex;
+}
+
+.sidebar {
+    width: 280px;
+    transition: margin-left 0.3s;
+}
+
+.main {
+    flex-grow: 1;
+    transition: margin-left 0.3s;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1030;
+        margin-left: -280px;
+    }
+
+    .admin-shell.sidebar-toggled .sidebar {
+        margin-left: 0;
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1020;
+        display: none;
+    }
+
+    .admin-shell.sidebar-toggled .sidebar-overlay {
+        display: block;
+    }
+}

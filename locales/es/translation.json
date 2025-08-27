@@ -1,0 +1,13 @@
+{
+  "loginTitle": "Inicia Sesión en PadelFlow",
+  "signupTitle": "Regístrate en PadelFlow",
+  "welcome": "Bienvenido a PadelFlow",
+  "emailLabel": "Correo Electrónico",
+  "passwordLabel": "Contraseña",
+  "loginButton": "Iniciar Sesión",
+  "signupButton": "Registrarse",
+  "noAccount": "¿No tienes cuenta? Regístrate",
+  "features": "Características",
+  "plans": "Planes",
+  "contact": "Contacto"
+}

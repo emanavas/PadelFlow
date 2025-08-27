@@ -1,0 +1,13 @@
+{
+  "loginTitle": "Login to PadelFlow",
+  "signupTitle": "Signup for PadelFlow",
+  "welcome": "Welcome to PadelFlow",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "loginButton": "Login",
+  "signupButton": "Sign Up",
+  "noAccount": "Don't have an account? Sign up",
+  "features": "Features",
+  "plans": "Plans",
+  "contact": "Contact"
+}

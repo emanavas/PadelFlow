@@ -1,0 +1,35 @@
+<%- include('../layouts/main') %>
+
+<div class="container mt-4">
+    <h1>Jugadores en Torneo: <%= tournament.name %></h1>
+
+    <% if (players.length > 0) { %>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre del Jugador</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% players.forEach(player => { %>
+                    <tr>
+                        <td><%= player.name %></td>
+                        <td>
+                            <!-- Add actions like remove player from tournament, edit player details -->
+                            <a href="/club/players/edit/<%= player.id %>" class="btn btn-sm btn-warning">Editar</a>
+                            <!-- Form for deleting player from tournament -->
+                            <form action="/club/tournaments/<%= tournament.id %>/players/<%= player.id %>/remove" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar a este jugador del torneo?');">Eliminar del Torneo</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <div class="alert alert-info">No hay jugadores inscritos en este torneo.</div>
+    <% } %>
+
+    <a href="/club/dashboard" class="btn btn-secondary">Volver al Dashboard</a>
+</div>

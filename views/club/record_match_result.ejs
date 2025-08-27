@@ -1,0 +1,21 @@
+<%- include('../layouts/main') %>
+
+<div class="container mt-4">
+    <h1>Registrar Resultado del Partido</h1>
+
+    <% if (match && player1 && player2) { %>
+        <p><strong>Torneo:</strong> <%= tournament.name %></p>
+        <p><strong>Partido:</strong> <%= player1.name %> vs <%= player2.name %></p>
+
+        <form action="/club/matches/record-result/<%= match.id %>" method="POST">
+            <div class="mb-3">
+                <label for="score" class="form-label">Resultado (Ej: 6-4, 6-2)</label>
+                <input type="text" class="form-control" id="score" name="score" value="<%= match.score || '' %>" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Resultado</button>
+            <a href="/club/tournaments/<%= tournament.id %>/players" class="btn btn-secondary">Cancelar</a>
+        </form>
+    <% } else { %>
+        <div class="alert alert-danger">Partido no encontrado o datos incompletos.</div>
+    <% } %>
+</div>

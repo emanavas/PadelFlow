@@ -1,0 +1,44 @@
+<%- include('../layouts/main') %>
+
+<div class="container mt-4">
+    <h1>Clasificación del Torneo: <%= tournament.name %></h1>
+
+    <% if (standings.length > 0) { %>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Posición</th>
+                    <th>Jugador</th>
+                    <th>Victorias</th>
+                    <th>Derrotas</th>
+                    <th>Sets Ganados</th>
+                    <th>Sets Perdidos</th>
+                    <th>Juegos Ganados</th>
+                    <th>Juegos Perdidos</th>
+                    <th>Diferencia de Sets</th>
+                    <th>Diferencia de Juegos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% standings.forEach((player, index) => { %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td><%= player.name %></td>
+                        <td><%= player.wins %></td>
+                        <td><%= player.losses %></td>
+                        <td><%= player.setsWon %></td>
+                        <td><%= player.setsLost %></td>
+                        <td><%= player.gamesWon %></td>
+                        <td><%= player.gamesLost %></td>
+                        <td><%= player.setsWon - player.setsLost %></td>
+                        <td><%= player.gamesWon - player.gamesLost %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <div class="alert alert-info">No hay datos de clasificación disponibles para este torneo.</div>
+    <% } %>
+
+    <a href="/club/dashboard" class="btn btn-secondary">Volver al Dashboard</a>
+</div>

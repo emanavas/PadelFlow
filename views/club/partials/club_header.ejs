@@ -1,0 +1,48 @@
+<header class="topbar navbar bg-white border-bottom sticky-top p-3  ">
+    <div class="container-fluid d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-light d-lg-none" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+            <a href="/" class="d-flex align-items-center mb-3 text-decoration-none">
+                <i class="fas fa-palette fa-2x text-primary me-2"></i>
+                <div>
+                    <strong>PádelManager</strong><br />
+                    <small class="text-muted">Panel del Club</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="me-2 text-end d-none d-md-block">
+                <div class="small text-muted">Club</div>
+                <div id="clubName"><%= user?.clubName || '-' %></div>
+            </div>
+
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none" id="userMenu"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="avatar bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2"
+                        style="width:40px;height:40px;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="text-end d-none d-sm-block">
+                        <div id="userName"><strong><%= user?.username || 'Administrador' %></strong></div>
+                        <small class="text-muted" id="userEmail"><%= user?.email || 'admin@example.com' %></small>
+                    </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/club/profile"><i class="fas fa-user-circle me-2"></i> Mi Perfil</a></li>
+                    <li><a class="dropdown-item" href="/club/settings"><i class="fas fa-cog me-2"></i> Ajustes del Club</a></li>
+                    <li><a class="dropdown-item" href="/club/wallshow" target="_blank"><i
+                                class="fas fa-tv me-2"></i>
+                            Ver Wallshow del Club</a></li>
+                    <li>
+                        <hr class="dropdown-divider" />
+                    </li>
+                    <li><a class="dropdown-item text-danger" href="/logout" id="signOutBtn"><i
+                                class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</header>

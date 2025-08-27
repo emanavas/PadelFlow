@@ -1,0 +1,78 @@
+/* Estilos base y pequeñas personalizaciones */
+    :root {
+      --primary: #0d6efd;
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background-color: #f8f9fa;
+    }
+
+    .hero {
+      background-image: linear-gradient(90deg, rgba(13,110,253,0.06), rgba(13,110,253,0.02));
+    }
+
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      transition: margin-left 0.35s ease-in-out;
+    }
+
+    .sidebar .list-group-item.active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    #adminApp main {
+      background-color: #f7f8fb;
+      min-height: 100vh;
+    }
+
+    /* Wallshow styles */
+    body.bg-dark {
+      background: linear-gradient(180deg, #0b1220, #071026);
+    }
+
+    .wall-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: transform .15s ease;
+    }
+
+    .wall-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .main {
+        transition: margin-left 0.35s ease-in-out;
+        width: 100%;
+    }
+
+    @media (max-width: 991.98px) { /* lg breakpoint */
+        .sidebar {
+            position: absolute;
+            z-index: 1000;
+            min-height: 100vh;
+            margin-left: -260px;
+        }
+
+        .admin-shell.sidebar-toggled .sidebar {
+            margin-left: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .admin-shell.sidebar-toggled .sidebar-overlay {
+            display: block;
+        }
+    }

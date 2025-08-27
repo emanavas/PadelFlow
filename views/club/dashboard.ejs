@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Club Dashboard — <%= club.name %>
+  </title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/club_dashboard.css" />
+</head>
+
+<body>
+  <%- include('partials/club_header') %>
+    <div class="club-shell d-flex">
+      <!-- Sidebar -->
+      <%- include('partials/club_sidebar', { club: club }) %>
+
+        <!-- Main -->
+        <div class="main flex-grow-1">
+          <!-- Content -->
+          <main class="container-fluid p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0">Dashboard de <%= club.name %>
+              </h1>
+              <div>
+                <!-- Add quick actions here -->
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+              <div class="col-sm-6 col-md-6 col-xl-3">
+                <div class="card stat-card">
+                  <div class="card-body bg-primary">
+                    <div class="d-flex justify-content-between">
+                      <div>
+                        <small class="text-muted">Total Jugadores</small>
+                        <h4>
+                          <%= players.length %>
+                        </h4>
+                      </div>
+                      <div class="icon text-white d-flex align-items-center justify-content-center">
+                        <i class="fas fa-users fa-2xl"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-6 col-md-6 col-xl-3">
+                <div class="card stat-card">
+                  <div class="card-body bg-success">
+                    <div class="d-flex justify-content-between">
+                      <div>
+                        <small class="text-muted">Torneos Activos</small>
+                        <h4>
+                          <%= tournaments.length %>
+                        </h4>
+                      </div>
+                      <div class="icon text-white d-flex align-items-center justify-content-center">
+                        <i class="fas fa-trophy fa-2xl"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add more stats as needed -->
+            </div>
+
+            <!-- Recent Activity / Quick Links -->
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <div class="card">
+                  <div class="card-header">
+                    Últimos Torneos
+                  </div>
+                  <ul class="list-group list-group-flush">
+                    <% if (tournaments.length> 0) { %>
+                      <% tournaments.slice(0, 5).forEach(tournament=> { %>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                          <%= tournament.name %>
+                            <span class="badge bg-secondary">
+                              <%= tournament.type %>
+                            </span>
+                        </li>
+                        <% }); %>
+                          <% } else { %>
+                            <li class="list-group-item">No hay torneos registrados.</li>
+                            <% } %>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="card">
+                  <div class="card-header">
+                    Jugadores Recientes
+                  </div>
+                  <ul class="list-group list-group-flush">
+                    <% if (players.length> 0) { %>
+                      <% players.slice(0, 5).forEach(player=> { %>
+                        <li class="list-group-item">
+                          <%= player.name %> (<%= player.email %>)
+                        </li>
+                        <% }); %>
+                          <% } else { %>
+                            <li class="list-group-item">No hay jugadores registrados.</li>
+                            <% } %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
