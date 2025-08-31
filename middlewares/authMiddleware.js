@@ -17,13 +17,8 @@ const isAuthenticated = (req, res, next) => {
 };
 
 const isClubAdmin = (req, res, next) => {
-    const clubIdBeingAccessed = req.params.club_id || req.body.club_id || req.query.club_id;
-
-    if (!clubIdBeingAccessed) {
-        return res.status(400).send('Bad Request: Club ID is required for this operation.');
-    }
-
-    if (req.user && req.user.role === 'club_admin' && req.user.club_id === parseInt(clubIdBeingAccessed)) {
+    // Check if user is a club admin or platform admin
+    if (req.user && (req.user.role === 'club_admin' || req.user.role === 'platform_admin')) {
         next();
     } else {
         res.status(403).send('Access Denied: You are not an administrator for this club or your role is incorrect.');

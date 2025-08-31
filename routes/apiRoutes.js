@@ -67,6 +67,4 @@ router.post('/api/tournaments/:id/suggest-score', (req, res) => {
     res.status(200).send('Score suggestion received.');
 });
 
-const getSseClients = () => clients;
-
-module.exports = { router, getSseClients };
+module.exports = router;

@@ -15,11 +15,11 @@ router.get('/dashboard', isAuthenticated, (req, res) => {
             return res.status(500).send('Error fetching clubs by activity');
         }
 
-        const sseClients = getSseClients();
-        let totalWallshowUsers = 0;
-        for (const tournamentId in sseClients) {
-            totalWallshowUsers += sseClients[tournamentId].length;
-        }
+        // const sseClients = getSseClients();
+        // let totalWallshowUsers = 0;
+        // for (const tournamentId in sseClients) {
+        //     totalWallshowUsers += sseClients[tournamentId].length;
+        // }
 
         // Fake data for the chart
         const viewersData = {
@@ -30,7 +30,7 @@ router.get('/dashboard', isAuthenticated, (req, res) => {
         res.render('admin/dashboard', {
             user: req.user,
             clubs: clubs,
-            totalWallshowUsers: totalWallshowUsers,
+            // totalWallshowUsers: totalWallshowUsers,
             viewersData: viewersData
         });
     });
@@ -71,7 +71,7 @@ router.get('/users/create', isAuthenticated, (req, res) => {
 
 // Route to handle the create user form submission
 router.post('/users/create', isAuthenticated, (req, res) => {
-    const { email, password, role, club_id } = req.body;
+    const { name, email, password, role, club_id } = req.body;
 
     // Hash password
     bcrypt.hash(password, 10, (err, hashedPassword) => {
@@ -83,7 +83,7 @@ router.post('/users/create', isAuthenticated, (req, res) => {
         // Convert club_id to null if it's an empty string (from "Ninguno" option)
         const finalClubId = club_id === '' ? null : parseInt(club_id);
 
-        userModel.createUser(email, hashedPassword, role, finalClubId, (err, result) => {
+    userModel.createUser(name, email, hashedPassword, role, finalClubId, (err, result) => {
             if (err) {
                 console.error('Error creating user:', err.message);
                 return res.status(500).send('Error creating user.');
@@ -115,17 +115,22 @@ router.get('/users/edit/:id', isAuthenticated, (req, res) => {
 // Route to handle the edit user form submission
 router.post('/users/edit/:id', isAuthenticated, (req, res) => {
     const userId = req.params.id;
-    const { email, password, role, club_id } = req.body;
+    const { name, email, password, role, club_id } = req.body;
 
-    // Prepare fields to update
-    let updateFields = { email, role };
-    if (club_id === '') {
-        updateFields.club_id = null; // Set to null if "Ninguno" is selected
-    } else {
-        updateFields.club_id = parseInt(club_id);
-    }
+    const updateFields = { name, email, role };
+    updateFields.club_id = (club_id === '') ? null : parseInt(club_id, 10);
 
-    // Only hash password if provided (i.e., not empty)
+    const saveUser = (fields) => {
+        userModel.updateUser(userId, fields, (err, result) => {
+            if (err) {
+                console.error('Error updating user:', err.message);
+                return res.status(500).send('Error updating user.');
+            }
+            console.log('User updated:', userId);
+            res.redirect('/admin/users');
+        });
+    };
+
     if (password) {
         bcrypt.hash(password, 10, (err, hashedPassword) => {
             if (err) {
@@ -133,25 +138,10 @@ router.post('/users/edit/:id', isAuthenticated, (req, res) => {
                 return res.status(500).send('Error updating user.');
             }
             updateFields.password = hashedPassword;
-            userModel.updateUser(userId, updateFields.email, updateFields.password, updateFields.role, updateFields.club_id, (err, result) => {
-                if (err) {
-                    console.error('Error updating user:', err.message);
-                    return res.status(500).send('Error updating user.');
-                }
-                console.log('User updated:', userId);
-                res.redirect('/admin/users'); // Redirect to user list
-            });
+            saveUser(updateFields);
         });
     } else {
-        // Update without changing password
-        userModel.updateUser(userId, updateFields.email, undefined, updateFields.role, updateFields.club_id, (err, result) => {
-            if (err) {
-                console.error('Error updating user:', err.message);
-                return res.status(500).send('Error updating user.');
-            }
-            console.log('User updated:', userId);
-            res.redirect('/admin/users'); // Redirect to user list
-        });
+        saveUser(updateFields);
     }
 });
 

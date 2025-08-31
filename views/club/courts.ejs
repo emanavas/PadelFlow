@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>
+    <%= title %> — PádelManager
+  </title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+</head>
+
+<body>
+  <%- include('../admin/partials/admin_header') %>
+    <div class="admin-shell">
+      <!-- Sidebar -->
+
+      <%- include('partials/club_sidebar', { club: locals?.club }) %>
+
+        <!-- Main -->
+        <div class="main flex-grow-1">
+          <!-- Content -->
+          <main class="container-fluid p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0">
+                <%= title %>
+              </h1>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCourtModal">
+                Crear Nueva Pista
+              </button>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                Lista de Pistas
+              </div>
+              <div class="card-body">
+                <% if (courts && courts.length > 0) { %>
+                  <ul class="list-group" id="courtsList">
+                    <% courts.forEach(court => { %>
+                      <li class="list-group-item d-flex justify-content-between align-items-center" data-court-id="<%= court.id %>">
+                        <%= court.name %> (Estado: <%= court.status %>)
+                        <div>
+                          <button type="button" class="btn btn-sm btn-info me-2 edit-court-btn"
+                            data-bs-toggle="modal" data-bs-target="#editCourtModal"
+                            data-court-id="<%= court.id %>"
+                            data-court-name="<%= court.name %>"
+                            data-court-status="<%= court.status %>">
+                            Editar
+                          </button>
+                          <form action="/club/courts/delete/<%= court.id %>" method="POST" style="display:inline;" class="delete-court-form">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar esta pista?');">Eliminar</button>
+                          </form>
+                        </div>
+                      </li>
+                      <% }); %>
+                  </ul>
+                  <% } else { %>
+                    <p id="noCourtsMessage">No hay pistas registradas en este club.</p>
+                    <% } %>
+              </div>
+            </div>
+
+          </main>
+        </div>
+    </div>
+
+    <!-- Create Court Modal -->
+    <div class="modal fade" id="createCourtModal" tabindex="-1" aria-labelledby="createCourtModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="createCourtModalLabel">Crear Nueva Pista</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="createCourtForm">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="createCourtName" class="form-label">Nombre de la Pista:</label>
+                <input type="text" class="form-control" id="createCourtName" name="name" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-primary">Crear Pista</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Court Modal -->
+    <div class="modal fade" id="editCourtModal" tabindex="-1" aria-labelledby="editCourtModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editCourtModalLabel">Editar Pista</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="editCourtForm">
+            <input type="hidden" id="editCourtId" name="id">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="editCourtName" class="form-label">Nombre de la Pista:</label>
+                <input type="text" class="form-control" id="editCourtName" name="name" required>
+              </div>
+              <div class="mb-3">
+                <label for="editCourtStatus" class="form-label">Estado:</label>
+                <select class="form-select" id="editCourtStatus" name="status" required>
+                  <option value="available">Disponible</option>
+                  <option value="busy">Ocupada</option>
+                  <option value="maintenance">Mantenimiento</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-primary">Actualizar Pista</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const courtsList = document.getElementById('courtsList');
+        const noCourtsMessage = document.getElementById('noCourtsMessage');
+
+        // Create Court
+        const createCourtForm = document.getElementById('createCourtForm');
+        createCourtForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(createCourtForm);
+          const name = formData.get('name');
+
+          try {
+            const response = await fetch('/club/courts/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ name }),
+            });
+
+            if (response.ok) {
+              const newCourt = await response.json();
+              const newCourtItem = document.createElement('li');
+              newCourtItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+              newCourtItem.setAttribute('data-court-id', newCourt.id);
+              newCourtItem.innerHTML = `
+                ${newCourt.name} (Estado: ${newCourt.status})
+                <div>
+                  <button type="button" class="btn btn-sm btn-info me-2 edit-court-btn"
+                    data-bs-toggle="modal" data-bs-target="#editCourtModal"
+                    data-court-id="${newCourt.id}"
+                    data-court-name="${newCourt.name}"
+                    data-court-status="${newCourt.status}">
+                    Editar
+                  </button>
+                  <form action="/club/courts/delete/${newCourt.id}" method="POST" style="display:inline;" class="delete-court-form">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar esta pista?');">Eliminar</button>
+                  </form>
+                </div>
+              `;
+              courtsList.appendChild(newCourtItem);
+              if (noCourtsMessage) noCourtsMessage.style.display = 'none';
+              createCourtForm.reset();
+              bootstrap.Modal.getInstance(document.getElementById('createCourtModal')).hide();
+            } else {
+              const errorData = await response.json();
+              alert(`Error al crear pista: ${errorData.message}`);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error de red al crear pista.');
+          }
+        });
+
+        // Edit Court - Populate Modal
+        const editCourtModal = document.getElementById('editCourtModal');
+        editCourtModal.addEventListener('show.bs.modal', (event) => {
+          const button = event.relatedTarget;
+          const courtId = button.getAttribute('data-court-id');
+          const courtName = button.getAttribute('data-court-name');
+          const courtStatus = button.getAttribute('data-court-status');
+
+          document.getElementById('editCourtId').value = courtId;
+          document.getElementById('editCourtName').value = courtName;
+          document.getElementById('editCourtStatus').value = courtStatus;
+        });
+
+        // Edit Court - Submit Form
+        const editCourtForm = document.getElementById('editCourtForm');
+        editCourtForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(editCourtForm);
+          const courtId = formData.get('id');
+          const name = formData.get('name');
+          const status = formData.get('status');
+
+          try {
+            const response = await fetch(`/club/courts/edit/${courtId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ name, status }),
+            });
+
+            if (response.ok) {
+              const updatedCourt = await response.json();
+              const courtItem = courtsList.querySelector(`[data-court-id="${courtId}"]`);
+              if (courtItem) {
+                courtItem.innerHTML = `
+                  ${updatedCourt.name} (Estado: ${updatedCourt.status})
+                  <div>
+                    <button type="button" class="btn btn-sm btn-info me-2 edit-court-btn"
+                      data-bs-toggle="modal" data-bs-target="#editCourtModal"
+                      data-court-id="${updatedCourt.id}"
+                      data-court-name="${updatedCourt.name}"
+                      data-court-status="${updatedCourt.status}">
+                      Editar
+                    </button>
+                    <form action="/club/courts/delete/${updatedCourt.id}" method="POST" style="display:inline;" class="delete-court-form">
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar esta pista?');">Eliminar</button>
+                    </form>
+                  </div>
+                `;
+              }
+              bootstrap.Modal.getInstance(document.getElementById('editCourtModal')).hide();
+            } else {
+              const errorData = await response.json();
+              alert(`Error al actualizar pista: ${errorData.message}`);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error de red al actualizar pista.');
+          }
+        });
+
+        // Delete Court - Submit Form (using event delegation)
+        courtsList.addEventListener('submit', async (e) => {
+          if (e.target.classList.contains('delete-court-form')) {
+            e.preventDefault();
+            if (!confirm('¿Estás seguro de que quieres eliminar esta pista?')) {
+              return;
+            }
+
+            const form = e.target;
+            const courtId = form.action.split('/').pop(); // Extract ID from form action URL
+
+            try {
+              const response = await fetch(`/club/courts/delete/${courtId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              });
+
+              if (response.ok) {
+                form.closest('li').remove(); // Remove the list item
+                if (courtsList.children.length === 0) {
+                  if (noCourtsMessage) noCourtsMessage.style.display = 'block';
+                }
+              } else {
+                const errorData = await response.json();
+                alert(`Error al eliminar pista: ${errorData.message}`);
+              }
+            } catch (error) {
+              console.error('Error:', error);
+              alert('Error de red al eliminar pista.');
+            }
+          }
+        });
+      });
+    </script>
+</body>
+
+</html>

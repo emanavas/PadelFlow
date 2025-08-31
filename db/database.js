@@ -25,7 +25,7 @@ function initDatabase() {
                         
                         // Check for and create default platform admin if not exists
                         const DEFAULT_ADMIN_EMAIL = 'admin@padelflow.com';
-                        const DEFAULT_ADMIN_PASSWORD = 'adminpassword'; // In a real app, use env vars
+                        const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'adminpassword'; // In a real app, use env vars
 
                         db.get('SELECT id FROM Users WHERE email = ? AND role = ?', [DEFAULT_ADMIN_EMAIL, 'platform_admin'], (err, row) => {
                             if (err) {
@@ -38,8 +38,8 @@ function initDatabase() {
                                         console.error('Error hashing default platform admin password:', err.message);
                                         return reject(err);
                                     }
-                                    db.run('INSERT INTO Users (email, password, role, club_id) VALUES (?, ?, ?, ?)', 
-                                        [DEFAULT_ADMIN_EMAIL, hashedPassword, 'platform_admin', null], 
+                                    db.run('INSERT INTO Users (name, email, password, role, club_id) VALUES (?, ?, ?, ?, ?)', 
+                                        ["Admin", DEFAULT_ADMIN_EMAIL, hashedPassword, 'platform_admin', null], 
                                         function(err) {
                                             if (err) {
                                                 console.error('Error creating default platform admin:', err.message);

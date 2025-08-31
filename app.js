@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const i18next = require('i18next');
@@ -10,7 +11,7 @@ const { initDatabase } = require('./db/database');
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/authRoutes');
 const adminRouter = require('./routes/adminRoutes')
-// const tournamentRouter = require('./routes/tournamentRoutes');
+const tournamentRouter = require('./routes/tournamentRoutes');
 const apiRouter = require('./routes/apiRoutes');
 const clubRouter = require('./routes/clubRoutes'); // Added this line
 
@@ -45,7 +46,7 @@ app.set('view engine', 'ejs');
 
 // Configuración de la sesión
 app.use(session({
-    secret: 'tu_secreto', // Cambia esto por un secreto real en una variable de entorno
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false } // Poner a true si usas HTTPS
@@ -63,8 +64,8 @@ app.use('/', indexRouter);
 app.use('/', authRouter);
 app.use('/admin', adminRouter);
 app.use('/club', clubRouter); // Added this line
-// app.use('/', tournamentRouter);
-// app.use('/', apiRouter);
+app.use('/tournaments', tournamentRouter);
+app.use('/api', apiRouter);
 
 // Definir puerto y arrancar servidor
 const PORT = process.env.PORT || 3000;

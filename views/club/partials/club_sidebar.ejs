@@ -1,10 +1,17 @@
 <aside class="sidebar bg-white border-end">
     <div class="p-3">
         <nav class="nav flex-column mb-3">
-            <a class="nav-link active" href="/club/<%= club.id %>/dashboard">Dashboard</a>
-            <a class="nav-link" href="/club/<%= club.id %>/players">Jugadores</a>
-            <a class="nav-link" href="/club/<%= club.id %>/tournaments">Torneos</a>
+            <a class="nav-link active" href="/club/dashboard">Dashboard</a>
+            <a class="nav-link" href="/club/players">Jugadores</a>
+            <a class="nav-link" href="/club/tournaments">Torneos</a>
+            <ul class="nav flex-column ms-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="/club/tournaments/create">Crear Torneo</a>
+                </li>
+            </ul>
+            <a class="nav-link" href="/club/courts">Pistas</a>
             <!-- Add more club admin specific links here -->
+            <a class="nav-link" href="/club/onboarding-guide">Guía de Onboarding</a>
         </nav>
     </div>
 </aside>

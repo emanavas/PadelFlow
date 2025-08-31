@@ -55,6 +55,32 @@
       </div>
     </section>
 
+    <% if (typeof mensaje !== 'undefined' && mensaje) { %>
+      <!-- Modal de advertencia para mensajes del backend -->
+      <div class="modal fade" id="loginWarningModal" tabindex="-1" aria-labelledby="loginWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title" id="loginWarningModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Advertencia</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <%= mensaje %>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var modal = new bootstrap.Modal(document.getElementById('loginWarningModal'));
+          modal.show();
+        });
+      </script>
+    <% } %>
+
     <footer class="py-4 bg-dark text-white">
       <div class="container d-flex justify-content-between">
         <div>© <span id="year"></span> PádelManager</div>

@@ -1,70 +1,98 @@
--- Clubs table
-CREATE TABLE IF NOT EXISTS Clubs (
+-- Tabla para la gestión de clubes y su información de contacto.
+CREATE TABLE IF NOT EXISTS clubs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    address TEXT,
     city TEXT,
-    email TEXT,
+    address TEXT,
     phone TEXT,
-    is_freemium INTEGER DEFAULT 1
+    email TEXT UNIQUE NOT NULL,
+    is_freemium INTEGER default 1 NOT NULL -- 1 para freemium, 0 para premium 
 );
 
--- Courts table (linked to Clubs)
-CREATE TABLE IF NOT EXISTS Courts (
+-- Tabla para todos los usuarios del sistema, ya sean administradores o jugadores.
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    club_id INTEGER NOT NULL,
     name TEXT NOT NULL,
-    is_active INTEGER DEFAULT 1,
-    status TEXT DEFAULT 'available',
-    FOREIGN KEY (club_id) REFERENCES Clubs(id)
-);
-
--- Users table
-CREATE TABLE IF NOT EXISTS Users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    role TEXT,
+    role TEXT NOT NULL, -- Por ejemplo: 'admin_platform', 'admin_club', 'manager_club'
     club_id INTEGER,
-    FOREIGN KEY (club_id) REFERENCES Clubs(id)
+    FOREIGN KEY(club_id) REFERENCES clubs(id)
 );
 
--- Tournaments table
-CREATE TABLE IF NOT EXISTS Tournaments (
+-- Tabla para las pistas de pádel gestionadas por cada club.
+CREATE TABLE IF NOT EXISTS courts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    type TEXT,
-    start_date TEXT,
-    end_date TEXT,
-    club_id INTEGER,
-    FOREIGN KEY (club_id) REFERENCES Clubs(id)
+    status TEXT NOT NULL, -- Estado de la pista: 'free', 'busy'
+    is_active BOOLEAN DEFAULT TRUE,
+    is_covered BOOLEAN DEFAULT FALSE,
+    club_id INTEGER NOT NULL,
+    FOREIGN KEY(club_id) REFERENCES clubs(id)
 );
 
--- Players table
-CREATE TABLE IF NOT EXISTS Players (
+-- Tabla para los torneos organizados por los clubes.
+CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    tournament_id INTEGER,
-    user_id INTEGER,
-    FOREIGN KEY (tournament_id) REFERENCES Tournaments(id),
-    FOREIGN KEY (user_id) REFERENCES Users(id)
+    description TEXT,
+    type TEXT NOT NULL, -- Tipo de torneo: 'elimination', 'round_robin', etc.
+    status TEXT DEFAULT 'pending',
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    club_id INTEGER NOT NULL,
+    FOREIGN KEY(club_id) REFERENCES clubs(id)
 );
 
--- Matches table (linked to Players, Tournaments, and Courts)
-CREATE TABLE IF NOT EXISTS Matches (
+-- Tabla para los partidos que se juegan dentro de un torneo.
+CREATE TABLE IF NOT EXISTS matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    player1_id INTEGER,
-    player2_id INTEGER,
-    player3_id INTEGER,
-    player4_id INTEGER,
+    phase TEXT,
     score TEXT,
-    tournament_id INTEGER,
-    court_id INTEGER,
-    scheduled_time TEXT,
-    FOREIGN KEY (player1_id) REFERENCES Players(id),
-    FOREIGN KEY (player2_id) REFERENCES Players(id),
-    FOREIGN KEY (player3_id) REFERENCES Players(id),
-    FOREIGN KEY (player4_id) REFERENCES Players(id),
-    FOREIGN KEY (tournament_id) REFERENCES Tournaments(id),
-    FOREIGN KEY (court_id) REFERENCES Courts(id)
+    team_winner TEXT, -- Referencia al equipo ganador (ej. 'A' or 'B')
+    start_timestamp TIMESTAMP,
+    end_timestamp TIMESTAMP,
+    tournament_id INTEGER NOT NULL,
+    court_id INTEGER NOT NULL,
+    FOREIGN KEY(tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+    FOREIGN KEY(court_id) REFERENCES courts(id) ON DELETE CASCADE
+);
+
+-- Tabla para los jugadores que pueden participar en los partidos.
+CREATE TABLE IF NOT EXISTS players (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE,
+    password TEXT,
+    ranking INTEGER DEFAULT 1000 -- permite establecer un ranking inicial
+);
+
+-- Tabla intermedia (many-to-many) para relacionar jugadores con partidos.
+-- Esto permite que múltiples jugadores participen en múltiples partidos.
+CREATE TABLE IF NOT EXISTS match_players (
+    player_id INTEGER NOT NULL,
+    match_id INTEGER NOT NULL,
+    team TEXT NOT NULL, -- Equipo del jugador en el partido (ej. 'A', 'B')
+    PRIMARY KEY (player_id, match_id),
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
+    FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE
+);
+
+-- Tabla intermedia para registrar jugadores en un torneo (Muchos a Muchos)
+CREATE TABLE IF NOT EXISTS tournament_players (
+    tournament_id INTEGER NOT NULL,
+    player_id INTEGER NOT NULL,
+    players_team_id INTEGER, -- combinacion de ambos id del jugador si tienen vinculo 
+    PRIMARY KEY (tournament_id, player_id),
+    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+);
+
+-- Tabla intermedia (many-to-many) para relacionar torneos con pistas.
+CREATE TABLE IF NOT EXISTS tournament_courts (
+    tournament_id INTEGER NOT NULL,
+    court_id INTEGER NOT NULL,
+    PRIMARY KEY (tournament_id, court_id),
+    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+    FOREIGN KEY (court_id) REFERENCES courts(id) ON DELETE CASCADE
 );

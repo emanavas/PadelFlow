@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guía de Onboarding — PádelManager</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/club_dashboard.css" />
+</head>
+
+<body>
+  <%- include('partials/club_header') %>
+    <div class="club-shell d-flex">
+      <!-- Sidebar -->
+      <%- include('partials/club_sidebar', { club: club }) %>
+
+        <!-- Main -->
+        <div class="main flex-grow-1">
+          <!-- Content -->
+          <main class="container-fluid p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0">Guía de Onboarding: Lanza tu Primer Torneo</h1>
+            </div>
+
+            <!-- Onboarding Guide Content -->
+            <div class="card p-4">
+                <h2>Checklist para tu Primer Torneo</h2>
+                <p>Sigue estos pasos para configurar y lanzar tu primer torneo en PádelManager de forma exitosa:</p>
+                <ol>
+                    <li>
+                        <strong>Paso 1: Definir Pistas del Club</strong>
+                        <p>Es crucial registrar las pistas de tu club en el sistema para poder asignarlas a los torneos. Puedes hacerlo desde la sección "Pistas" en el menú lateral de tu panel de control del club.</p>
+                        <ul>
+                            <li>Navega a "Pistas" en el menú.</li>
+                            <li>Haz clic en "Crear Pista" y rellena los detalles (nombre, tipo, etc.).</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Paso 2: Crear Jugadores</strong>
+                        <p>Antes de crear un torneo, asegúrate de que tus jugadores estén registrados en el sistema. Puedes añadir nuevos jugadores desde la sección "Jugadores" en el menú lateral o directamente al crear un torneo.</p>
+                        <ul>
+                            <li>Navega a "Jugadores" en el menú.</li>
+                            <li>Haz clic en "Crear Jugador" y rellena los datos necesarios.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Paso 3: Crear un Torneo</strong>
+                        <p>Una vez que tengas tus jugadores listos, es hora de crear el torneo:</p>
+                        <ul>
+                            <li>Ve a la sección "Torneos" en el menú lateral.</li>
+                            <li>Haz clic en "Crear Torneo".</li>
+                            <li>Rellena los detalles básicos del torneo: nombre, descripción, tipo (ej. Americana, Liga), fechas de inicio y fin, y el número de pistas a utilizar.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Paso 4: Añadir Jugadores al Torneo</strong>
+                        <p>Después de crear el torneo, serás redirigido a la página de gestión del mismo. Aquí podrás asignar los jugadores que participarán:</p>
+                        <ul>
+                            <li>Selecciona los jugadores existentes de tu club o crea nuevos jugadores específicos para este torneo.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Paso 5: Configurar Partidos y Registrar Resultados</strong>
+                        <p>Dependiendo del tipo de torneo, podrás configurar los partidos (si es necesario) y, a medida que se jueguen, registrar los resultados para que las clasificaciones se actualicen automáticamente.</p>
+                    </li>
+                    <li>
+                        <strong>Paso 6: Compartir el Torneo</strong>
+                        <p>Una vez que el torneo esté configurado, comparte el enlace público con los participantes para que puedan seguir los resultados y clasificaciones en tiempo real.</p>
+                    </li>
+                </ol>
+                <p>¡Con estos pasos, estarás listo para lanzar y gestionar tus torneos de pádel de manera eficiente!</p>
+            </div>
+
+          </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

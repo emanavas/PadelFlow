@@ -1,12 +1,12 @@
 const { getDb } = require('../db/database');
 
 const playerModel = {
-    createPlayer: (tournament_id, user_id, name, callback) => {
+    createPlayer: (name, email, password, callback) => {
         const db = getDb();
-        db.run('INSERT INTO Players (tournament_id, user_id, name) VALUES (?, ?, ?)', 
-            [tournament_id, user_id, name], 
+        db.run('INSERT INTO Players (name, email, password) VALUES (?, ?, ?)', 
+            [name, email, password], 
             function(err) {
-                callback(err, { id: this.lastID });
+                callback(err, { id: this.lastID, name, email });
             }
         );
     },
@@ -18,28 +18,22 @@ const playerModel = {
         });
     },
 
-    getPlayersByTournamentId: (tournament_id, callback) => {
+    getPlayers: (callback) => {
         const db = getDb();
-        db.all('SELECT * FROM Players WHERE tournament_id = ?', [tournament_id], (err, rows) => {
+        db.all('SELECT * FROM Players', [], (err, rows) => {
             callback(err, rows);
         });
     },
 
-    getPlayersByClubId: (club_id, callback) => {
+    getPlayersNotInTournament: (tournamentId, callback) => {
         const db = getDb();
-        db.all('SELECT p.* FROM Players p JOIN Tournaments t ON p.tournament_id = t.id WHERE t.club_id = ?', [club_id], (err, rows) => {
-            callback(err, rows);
-        });
-    },
-
-    addPlayerToTournament: (player_id, tournament_id, callback) => {
-        const db = getDb();
-        db.run('UPDATE Players SET tournament_id = ? WHERE id = ?', 
-            [tournament_id, player_id], 
-            function(err) {
-                callback(err, { changes: this.changes });
-            }
-        );
+        const sql = `
+            SELECT p.*
+            FROM players p
+            LEFT JOIN tournament_players tp ON p.id = tp.player_id AND tp.tournament_id = ?
+            WHERE tp.player_id IS NULL
+        `;
+        db.all(sql, [tournamentId], callback);
     },
 
     updatePlayer: (id, name, callback) => {
@@ -47,7 +41,7 @@ const playerModel = {
         db.run('UPDATE Players SET name = ? WHERE id = ?', 
             [name, id], 
             function(err) {
-                callback(err, { changes: this.changes });
+                callback(err, { id, name });
             }
         );
     },

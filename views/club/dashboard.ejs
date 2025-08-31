@@ -82,10 +82,13 @@
                     <% if (tournaments.length> 0) { %>
                       <% tournaments.slice(0, 5).forEach(tournament=> { %>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                          <%= tournament.name %>
-                            <span class="badge bg-secondary">
-                              <%= tournament.type %>
-                            </span>
+                          <div>
+                            <span class="fw-bold"><%= tournament.name %></span>
+                            <span class="badge bg-secondary ms-2"><%= tournament.type %></span>
+                          </div>
+                          <a href="/club/tournaments/<%= tournament.id %>/manage" class="btn btn-sm btn-primary">
+                            <i class="fas fa-users-cog me-1"></i> Gestionar
+                          </a>
                         </li>
                         <% }); %>
                           <% } else { %>

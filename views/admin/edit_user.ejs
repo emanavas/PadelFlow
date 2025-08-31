@@ -36,11 +36,14 @@
                   Formulario de Edición de Usuario
                 </div>
                 <div class="card-body">
-                  <form action="/admin/users/edit/<%= user.id %>" method="POST">
-                    <input type="hidden" name="_method" value="PUT"> <!-- For PUT/PATCH simulation if needed -->
+                  <form action="/admin/users/edit/<%= userToEdit.id %>" method="POST">
+                    <div class="mb-3">
+                      <label for="name" class="form-label">Nombre</label>
+                      <input type="text" class="form-control" id="name" name="name" value="<%= userToEdit.name %>" required>
+                    </div>
                     <div class="mb-3">
                       <label for="email" class="form-label">Email</label>
-                      <input type="email" class="form-control" id="email" name="email" value="<%= user.email %>"
+                      <input type="email" class="form-control" id="email" name="email" value="<%= userToEdit.email %>"
                         required>
                     </div>
                     <div class="mb-3">
@@ -51,19 +54,20 @@
                     <div class="mb-3">
                       <label for="role" class="form-label">Rol</label>
                       <select class="form-select" id="role" name="role" required>
-                        <option value="player" <%=user.role==='player' ? 'selected' : '' %>>Jugador</option>
-                        <option value="club_admin" <%=user.role==='club_admin' ? 'selected' : '' %>>Administrador de
-                          Club</option>
-                        <option value="platform_admin" <%=user.role==='platform_admin' ? 'selected' : '' %>
+                        <option value="player" <%=userToEdit.role==='player' ? 'selected' : '' %>>Jugador</option>
+                        <option value="club_admin" <%=userToEdit.role==='club_admin' ? 'selected' : '' %>>Administrador
+                          de Club</option>
+                        <option value="platform_admin" <%=userToEdit.role==='platform_admin' ? 'selected' : '' %>
                           >Administrador de Plataforma</option>
                       </select>
                     </div>
                     <div class="mb-3">
                       <label for="club_id" class="form-label">Club (Opcional)</label>
                       <select class="form-select" id="club_id" name="club_id">
-                        <option value="" <%=user.club_id===null ? 'selected' : '' %>>Ninguno</option>
+                        <option value="" <%=userToEdit.club_id===null ? 'selected' : '' %>>Ninguno</option>
                         <% clubs.forEach(club=> { %>
-                          <option value="<%= club.id %>" <%=user.club_id===club.id ? 'selected' : '' %>><%= club.name %>
+                          <option value="<%= club.id %>" <%=userToEdit.club_id===club.id ? 'selected' : '' %>><%=
+                            club.name %>
                           </option>
                           <% }); %>
                       </select>

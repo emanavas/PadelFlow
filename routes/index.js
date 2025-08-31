@@ -1,8 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const util = require('util');
+
 const tournamentModel = require('../models/tournamentModel');
 const matchModel = require('../models/matchModel');
 const playerModel = require('../models/playerModel');
+
+// Promisify model functions
+const getTournamentByIdAsync = util.promisify(tournamentModel.getTournamentById);
+const getMatchesByTournamentIdAsync = util.promisify(matchModel.getMatchesByTournamentId);
+const getPlayerByIdAsync = util.promisify(playerModel.getPlayerById);
 
 // Ruta para cambiar el idioma
 router.get('/lang/:lng', (req, res) => {
@@ -17,59 +24,38 @@ router.get('/', (req, res) => {
 });
 
 // GET route for live wallshow
-router.get('/wallshow/:tournamentId', (req, res) => {
-    const tournamentId = req.params.tournamentId;
+router.get('/wallshow/:tournamentId', async (req, res) => {
+    try {
+        const tournamentId = req.params.tournamentId;
 
-    tournamentModel.getTournamentById(tournamentId, (err, tournament) => {
-        if (err) {
-            console.error('Error fetching tournament for wallshow:', err.message);
-            return res.status(500).send('Error fetching tournament.');
-        }
+        const tournament = await getTournamentByIdAsync(tournamentId);
         if (!tournament) {
             return res.status(404).send('Torneo no encontrado.');
         }
 
-        matchModel.getMatchesByTournamentId(tournamentId, (err, matches) => {
-            if (err) {
-                console.error('Error fetching matches for wallshow:', err.message);
-                return res.status(500).send('Error fetching matches.');
-            }
+        const matches = await getMatchesByTournamentIdAsync(tournamentId);
 
-            // Fetch player names for each match
-            const matchesWithPlayerNames = [];
-            let playersFetched = 0;
+        if (matches.length === 0) {
+            return res.render('public/live_dashboard', { tournament: tournament, matches: [] });
+        }
 
-            if (matches.length === 0) {
-                return res.render('public/live_dashboard', { tournament: tournament, matches: [] });
-            }
+        // Fetch player names for each match concurrently
+        const matchesWithPlayerNames = await Promise.all(matches.map(async (match) => {
+            const player1 = await getPlayerByIdAsync(match.player1_id);
+            const player2 = await getPlayerByIdAsync(match.player2_id);
+            return {
+                ...match,
+                player1_name: player1 ? player1.name : 'N/A',
+                player2_name: player2 ? player2.name : 'N/A'
+            };
+        }));
 
-            matches.forEach(match => {
-                playerModel.getPlayerById(match.player1_id, (err, player1) => {
-                    if (err) {
-                        console.error('Error fetching player1 for wallshow:', err.message);
-                        return res.status(500).send('Error fetching player1.');
-                    }
-                    playerModel.getPlayerById(match.player2_id, (err, player2) => {
-                        if (err) {
-                            console.error('Error fetching player2 for wallshow:', err.message);
-                            return res.status(500).send('Error fetching player2.');
-                        }
+        res.render('public/live_dashboard', { tournament: tournament, matches: matchesWithPlayerNames });
 
-                        matchesWithPlayerNames.push({
-                            ...match,
-                            player1_name: player1 ? player1.name : 'N/A',
-                            player2_name: player2 ? player2.name : 'N/A'
-                        });
-
-                        playersFetched++;
-                        if (playersFetched === matches.length) {
-                            res.render('public/live_dashboard', { tournament: tournament, matches: matchesWithPlayerNames });
-                        }
-                    });
-                });
-            });
-        });
-    });
+    } catch (err) {
+        console.error('Error fetching data for wallshow:', err.message);
+        res.status(500).send('Error fetching data for wallshow.');
+    }
 });
 
 module.exports = router;

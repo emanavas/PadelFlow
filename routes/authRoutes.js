@@ -1,174 +1,140 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const util = require('util');
+
 const clubModel = require('../models/clubModel');
 const playerModel = require('../models/playerModel');
-const userModel = require('../models/userModel'); // Import userModel
+const userModel = require('../models/userModel');
 
-// Ruta para mostrar el formulario de login
+// Promisify functions
+const findUserByEmailAsync = util.promisify(userModel.findUserByEmail);
+const createUserAsync = util.promisify(userModel.createUser);
+const createClubAsync = util.promisify(clubModel.createClub);
+const createPlayerAsync = util.promisify(playerModel.createPlayer);
+const compareAsync = util.promisify(bcrypt.compare);
+const hashAsync = util.promisify(bcrypt.hash);
+
+// Route to display login form
 router.get('/login', (req, res) => {
-    res.render('auth/login', { title: req.t('loginTitle') });
-});
-
-// Ruta para procesar el login
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
-
-    userModel.findUserByEmail(email, (err, user) => {
-        if (err) {
-            console.error('Error finding user:', err.message);
-            return res.status(500).send('Error during login.');
-        }
-        if (!user) {
-            return res.status(400).send('Invalid credentials.');
-        }
-
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-            if (err) {
-                console.error('Error comparing passwords:', err.message);
-                return res.status(500).send('Error during login.');
-            }
-            if (!isMatch) {
-                return res.status(400).send('Invalid credentials.');
-            }
-
-            req.session.userId = user.id; // Store user ID in session
-            req.session.userRole = user.role; // Store user role in session
-
-            // Redirect based on role
-            if (user.role === 'platform_admin') {
-                res.redirect('/admin/dashboard'); // Assuming a platform admin dashboard
-            } else if (user.role === 'club_admin') {
-                if (user.club_id) {
-                    res.redirect(`/club/${user.club_id}/dashboard`); // Redirect to specific club dashboard
-                } else {
-                    res.redirect('/admin/dashboard'); // Fallback for club admins without a primary club_id
-                }
-            } else if (user.role === 'player') {
-                res.redirect('/player/dashboard'); // Assuming a player dashboard
-            } else {
-                res.redirect('/'); // Default redirect
-            }
-        });
+    res.render('auth/login', {
+        title: req.t('loginTitle'),
+        mensaje: req.session.mensaje || null
     });
+    req.session.mensaje = null;
 });
 
-// Ruta para mostrar el formulario de registro de club/admin
+// Route to process login
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await findUserByEmailAsync(email);
+        if (!user) {
+            req.session.mensaje = 'Credenciales inválidas.';
+            return res.redirect('/login');
+        }
+
+        const isMatch = await compareAsync(password, user.password);
+        if (!isMatch) {
+            req.session.mensaje = 'Credenciales inválidas.';
+            return res.redirect('/login');
+        }
+
+        req.session.userId = user.id;
+        req.session.userRole = user.role;
+
+        if (user.role === 'club_admin' && user.club_id) {
+            req.session.clubId = user.club_id;
+        }
+
+        if (user.role === 'platform_admin') {
+            res.redirect('/admin/dashboard');
+        } else if (user.role === 'club_admin') {
+            res.redirect('/club/dashboard');
+        } else if (user.role === 'player') {
+            res.redirect('/player/dashboard');
+        } else {
+            res.redirect('/');
+        }
+    } catch (err) {
+        console.error('Error during login:', err.message);
+        req.session.mensaje = 'Error interno en el login.';
+        res.redirect('/login');
+    }
+});
+
+// Route to display club/admin registration form
 router.get('/signup', (req, res) => {
     res.render('auth/signup', { title: req.t('signupTitle') });
 });
 
-// Ruta para procesar el registro de club/admin
-router.post('/signup', (req, res) => {
-    const { userType, clubName, email, password } = req.body; 
-
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-            console.error('Error hashing password:', err.message);
-            return res.status(500).send('Error during user registration.');
-        }
+// Route to process club/admin registration
+router.post('/signup', async (req, res) => {
+    try {
+        const { userType, clubName, email, password } = req.body; 
+        const hashedPassword = await hashAsync(password, 10);
 
         if (userType === 'club_admin') {
             if (!clubName) {
                 return res.status(400).send('Club Name is required for Club Admin registration.');
             }
-            clubModel.createClub(clubName, (err, clubResult) => {
-                if (err) {
-                    console.error('Error creating club:', err.message);
-                    return res.status(500).send('Error during club registration.');
-                }
-                const clubId = clubResult.id;
+            const clubResult = await createClubAsync(clubName);
+            const clubId = clubResult.id;
 
-                userModel.createUser(email, hashedPassword, 'club_admin', clubId, (err, userResult) => {
-                    if (err) {
-                        console.error('Error creating club admin user:', err.message);
-                        return res.status(500).send('Error during user registration.');
-                    }
-                    console.log('Club and Club Admin registered:', userResult.id);
-                    res.redirect('/login');
-                });
-            });
+            await createUserAsync(email, hashedPassword, 'club_admin', clubId);
+            console.log('Club and Club Admin registered');
+            res.redirect('/login');
         } else if (userType === 'platform_admin') {
-            userModel.createUser(email, hashedPassword, 'platform_admin', null, (err, userResult) => {
-                if (err) {
-                    console.error('Error creating platform admin user:', err.message);
-                    return res.status(500).send('Error during user registration.');
-                }
-                console.log('Platform Admin registered:', userResult.id);
-                res.redirect('/login');
-            });
+            await createUserAsync(email, hashedPassword, 'platform_admin', null);
+            console.log('Platform Admin registered');
+            res.redirect('/login');
         } else {
             return res.status(400).send('Invalid user type selected.');
         }
-    });
+    } catch (err) {
+        console.error('Error during user registration:', err.message);
+        res.status(500).send('Error during user registration.');
+    }
 });
 
-// Ruta para mostrar el formulario de registro de jugador (auto-registro)
+// Route to display player self-registration form
 router.get('/player/register', (req, res) => {
     res.render('auth/player_signup', { title: req.t('playerSignupTitle') });
 });
 
-// Ruta para procesar el auto-registro de jugador
-router.post('/player/register', (req, res) => {
-    const { name, email, password } = req.body;
-
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-            console.error('Error hashing password:', err.message);
-            return res.status(500).send('Error during player self-registration.');
-        }
-
-        userModel.createUser(email, hashedPassword, 'player', null, (err, userResult) => { // club_id is null for self-registered players initially
-            if (err) {
-                console.error('Error creating player user:', err.message);
-                return res.status(500).send('Error during player self-registration.');
-            }
-            const userId = userResult.id;
-
-            playerModel.createPlayer(null, userId, name, (err, playerResult) => { // tournament_id is null initially
-                if (err) {
-                    console.error('Error creating player entry:', err.message);
-                    return res.status(500).send('Error during player entry creation.');
-                }
-                console.log('Player self-registered:', userId, playerResult.id);
-                res.redirect('/login'); // Redirect to login after successful registration
-            });
-        });
-    });
+// Route to process player self-registration
+router.post('/player/register', async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        const hashedPassword = await hashAsync(password, 10);
+        const userResult = await createUserAsync(email, hashedPassword, 'player', null);
+        const userId = userResult.id;
+        await createPlayerAsync(null, userId, name);
+        console.log('Player self-registered:', userId);
+        res.redirect('/login');
+    } catch (err) {
+        console.error('Error during player self-registration:', err.message);
+        res.status(500).send('Error during player self-registration.');
+    }
 });
 
 // Existing route for player registration (by club admin or tournament context)
-router.post('/player/signup', (req, res) => {
-    const { tournamentId, name, email, password } = req.body; // Added password for player user
-
-    // Create a user entry for the player
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-            console.error('Error hashing player password:', err.message);
-            return res.status(500).send('Error during player user registration.');
-        }
-
-        userModel.createUser(email, hashedPassword, 'player', null, (err, userResult) => { // club_id can be null for players initially, or linked to a specific club if they register through one
-            if (err) {
-                console.error('Error creating player user:', err.message);
-                return res.status(500).send('Error during player user registration.');
-            }
-            const userId = userResult.id;
-
-            // Then, create the player entry linked to the user (if needed for tournament-specific data)
-            playerModel.createPlayer(tournamentId, userId, name, (err, playerResult) => { // Changed email to userId
-                if (err) {
-                    console.error('Error creating player entry:', err.message);
-                    return res.status(500).send('Error during player entry creation.');
-                }
-                console.log('Player user and entry registered:', userId, playerResult.id);
-                res.status(200).send('Player registered successfully.');
-            });
-        });
-    });
+router.post('/player/signup', async (req, res) => {
+    try {
+        const { tournamentId, name, email, password } = req.body;
+        const hashedPassword = await hashAsync(password, 10);
+        const userResult = await createUserAsync(email, hashedPassword, 'player', null);
+        const userId = userResult.id;
+        await createPlayerAsync(tournamentId, userId, name);
+        console.log('Player user and entry registered:', userId);
+        res.status(200).send('Player registered successfully.');
+    } catch (err) {
+        console.error('Error during player user registration:', err.message);
+        res.status(500).send('Error during player user registration.');
+    }
 });
 
-// Ruta para cerrar sesión
+// Route to log out
 router.get('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
@@ -181,4 +147,3 @@ router.get('/logout', (req, res) => {
 });
 
 module.exports = router;
-

@@ -1,34 +1,77 @@
 const { getDb } = require('../db/database');
 
 const matchModel = {
-    createMatch: (tournament_id, player1_id, player2_id, player3_id, player4_id, score, callback) => {
+    // Creates a match record without players. Players are linked via match_players table.
+    createMatch: (tournament_id, phase, court_id, callback) => {
         const db = getDb();
-        db.run('INSERT INTO Matches (tournament_id, player1_id, player2_id, player3_id, player4_id, score) VALUES (?, ?, ?, ?, ?, ?)', 
-            [tournament_id, player1_id, player2_id, player3_id, player4_id, score], 
+        // Removed player_id columns from INSERT statement
+        db.run('INSERT INTO matches (tournament_id, phase, court_id) VALUES (?, ?, ?)',
+            [tournament_id, phase, court_id],
             function(err) {
                 callback(err, { id: this.lastID });
             }
         );
     },
 
+    // Links players to a specific match in the match_players table
+    addPlayersToMatch: (matchId, playersWithTeams, callback) => {
+        const db = getDb();
+        const stmt = db.prepare('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)');
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION;');
+            playersWithTeams.forEach(player => {
+                stmt.run(matchId, player.id, player.team);
+            });
+            db.run('COMMIT;', (err) => {
+                stmt.finalize();
+                callback(err, { message: `Added ${playersWithTeams.length} players to match ${matchId}.` });
+            });
+        });
+    },
+
     getMatchById: (id, callback) => {
         const db = getDb();
-        db.get('SELECT * FROM Matches WHERE id = ?', [id], (err, row) => {
-            callback(err, row);
-        });
+        // Join with match_players and players to get player details
+        const sql = `
+            SELECT
+                m.*,
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.name END) AS team_a_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.name END) AS team_b_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.id END) AS team_a_player_ids,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.id END) AS team_b_player_ids
+            FROM matches m
+            LEFT JOIN match_players mp ON m.id = mp.match_id
+            LEFT JOIN players p ON mp.player_id = p.id
+            WHERE m.id = ?
+            GROUP BY m.id
+        `;
+        db.get(sql, [id], callback);
     },
 
     getMatchesByTournamentId: (tournament_id, callback) => {
         const db = getDb();
-        db.all('SELECT * FROM Matches WHERE tournament_id = ?', [tournament_id], (err, rows) => {
-            callback(err, rows);
-        });
+        // Join with match_players and players to get player details for all matches
+        const sql = `
+            SELECT
+                m.*,
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.name END) AS team_a_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.name END) AS team_b_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.id END) AS team_a_player_ids,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.id END) AS team_b_player_ids
+            FROM matches m
+            LEFT JOIN match_players mp ON m.id = mp.match_id
+            LEFT JOIN players p ON mp.player_id = p.id
+            WHERE m.tournament_id = ?
+            GROUP BY m.id
+            ORDER BY m.phase, m.id
+        `;
+        db.all(sql, [tournament_id], callback);
     },
 
-    updateMatch: (id, score, callback) => {
+    updateMatch: (id, score, team_winner, callback) => { // Added team_winner
         const db = getDb();
-        db.run('UPDATE Matches SET score = ? WHERE id = ?', 
-            [score, id], 
+        db.run('UPDATE matches SET score = ?, team_winner = ? WHERE id = ?', // Updated table name to 'matches'
+            [score, team_winner, id],
             function(err) {
                 callback(err, { changes: this.changes });
             }
@@ -37,72 +80,15 @@ const matchModel = {
 
     deleteMatch: (id, callback) => {
         const db = getDb();
-        db.run('DELETE FROM Matches WHERE id = ?', [id], function(err) {
+        db.run('DELETE FROM matches WHERE id = ?', [id], function(err) { // Updated table name to 'matches'
             callback(err, { changes: this.changes });
         });
     },
 
-    // Assumes teams is an array of teams, where each team is an array of two player_ids, e.g., [[p1, p2], [p3, p4]]
-    generateRoundRobinMatches: (tournament_id, teams, callback) => {
-        const db = getDb();
-        const numTeams = teams.length;
-
-        if (numTeams < 2) {
-            return callback(new Error("Not enough teams to generate matches."));
-        }
-
-        const matches = [];
-        for (let i = 0; i < numTeams; i++) {
-            for (let j = i + 1; j < numTeams; j++) {
-                const team1 = teams[i];
-                const team2 = teams[j];
-                matches.push({
-                    tournament_id,
-                    player1_id: team1[0],
-                    player2_id: team1[1],
-                    player3_id: team2[0],
-                    player4_id: team2[1],
-                    score: null
-                });
-            }
-        }
-
-        const stmt = db.prepare('INSERT INTO Matches (tournament_id, player1_id, player2_id, player3_id, player4_id, score) VALUES (?, ?, ?, ?, ?, ?)');
-        db.serialize(() => {
-            db.run('BEGIN TRANSACTION;');
-            matches.forEach(match => {
-                stmt.run(match.tournament_id, match.player1_id, match.player2_id, match.player3_id, match.player4_id, match.score);
-            });
-            db.run('COMMIT;', (err) => {
-                stmt.finalize();
-                callback(err, { message: `Generated ${matches.length} matches.` });
-            });
-        });
-    },
-
-    // Placeholder: Logic needs to be adapted for teams
-    generateEliminationMatches: (tournament_id, teams, callback) => {
-        console.log("generateEliminationMatches for teams needs to be implemented.");
-        callback(null, { message: "Elimination match generation for teams is not yet implemented." });
-    },
-
-    advanceEliminationWinner: (match_id, winner_team, callback) => {
-        const db = getDb();
-        // This is a simplified placeholder. A full implementation would need to handle team advancement.
-        console.log(`Team with players ${winner_team.join(' and ')} won match ${match_id}. Advancement logic needs to be implemented.`);
-        callback(null, { message: `Team advanced from match ${match_id}. (Advancement logic placeholder)` });
-    },
-
-    // Placeholder: Logic needs to be adapted for teams
-    generateLeagueMatches: (tournament_id, teams, callback) => {
-        console.log("generateLeagueMatches for teams needs to be implemented.");
-        callback(null, { message: "League match generation for teams is not yet implemented." });
-    },
-
     assignCourtToMatch: (match_id, court_id, callback) => {
         const db = getDb();
-        db.run('UPDATE Matches SET court_id = ? WHERE id = ?', 
-            [court_id, match_id], 
+        db.run('UPDATE matches SET court_id = ? WHERE id = ?', // Updated table name to 'matches'
+            [court_id, match_id],
             function(err) {
                 callback(err, { changes: this.changes });
             }
