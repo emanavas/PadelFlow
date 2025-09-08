@@ -1,17 +1,44 @@
-const { getDb } = require('../db/database');
+const { dbRun, dbGet, dbAll } = require('../db/dbHelpers');
+const { calculateWinner } = require('../utils/scoring');
+
+
+/**
+ * Internal helper function to parse the JSON settings of a tournament.
+ * If parsing fails, it assigns default settings.
+ * @param {object} tournament The tournament object with a `setting` property.
+ * @returns {object} The tournament object with the `setting` property parsed as an object.
+ * @private
+ */
+function _parseTournamentSettings(tournament) {
+    if (tournament && tournament.setting) {
+        try {
+            tournament.setting = JSON.parse(tournament.setting);
+        } catch (e) {
+            console.error(`Error parsing settings for tournament ${tournament.id}:`, e);
+            tournament.setting = { match_duration: 60 }; 
+        }
+    } else if (tournament) {
+        tournament.setting = { match_duration: 60 };
+    }
+    return tournament;
+}
 
 const tournamentModel = {
 
+    /**
+     * Initializes an elimination-style tournament. It creates pairs, generates a bracket, 
+     * creates matches for the first round, and assigns courts and start times.
+     * @param {number} tournamentId The ID of the tournament to initialize.
+     * @returns {Promise<{success: boolean}>} A promise that resolves to an object indicating success.
+     * @throws {Error} Throws an error if the tournament is not found, has no courts, has an invalid number of players/pairs, or other setup issues.
+     */
     initializeEliminationTournament: async function (tournamentId) {
-        const db = getDb();
-        const dbRun = (sql, params) => new Promise((resolve, reject) => db.run(sql, params, function (err) { if (err) reject(err); else resolve(this); }));
-        const dbGet = (sql, params) => new Promise((resolve, reject) => db.get(sql, params, (err, row) => { if (err) reject(err); else resolve(row); }));
-        const dbAll = (sql, params) => new Promise((resolve, reject) => db.all(sql, params, (err, rows) => { if (err) reject(err); else resolve(rows); }));
-
         try {
             await dbRun("BEGIN TRANSACTION;");
 
-            const tournament = await dbGet('SELECT * FROM tournaments WHERE id = ?', [tournamentId]);
+            let tournament = await dbGet('SELECT * FROM tournaments WHERE id = ?', [tournamentId]);
+            tournament = _parseTournamentSettings(tournament);
+
             const players = await dbAll('SELECT p.id, p.ranking, tp.players_team_id FROM players p JOIN tournament_players tp ON p.id = tp.player_id WHERE tp.tournament_id = ?', [tournamentId]);
             const courts = await dbAll('SELECT c.id, c.name FROM courts c JOIN tournament_courts tc ON c.id = tc.court_id WHERE tc.tournament_id = ?', [tournamentId]);
 
@@ -45,10 +72,8 @@ const tournamentModel = {
             if ((numPairs & (numPairs - 1)) !== 0) throw new Error('El número de parejas debe ser una potencia de 2 (2, 4, 8, 16, etc.).');
             const numOfMatches = numPairs / 2;
             const allPhases = tournamentModel.generateBracketPhases(numOfMatches);
-            //get list of matches depend of assigned courts to this tournament
             const assignedCourts = new Map();
             courts.forEach(c => assignedCourts.set(c.id, c));
-            // iterate each court and assign to match
             for (const phase of allPhases) {
                 const match = await dbGet('SELECT id FROM matches WHERE tournament_id = ? AND phase = ?', [tournamentId, phase]);
                 if (match) {
@@ -79,7 +104,6 @@ const tournamentModel = {
                 
                 const assignedCourt = courts[courtIndex];
                 
-                // Add this check to ensure assignedCourt is valid
                 if (!assignedCourt || assignedCourt.id === undefined || assignedCourt.id === null) {
                     throw new Error('Assigned court is invalid or missing ID. This might indicate an issue with court association or an empty courts array despite checks.');
                 }
@@ -92,7 +116,7 @@ const tournamentModel = {
                 for (const player of teamA) await dbRun('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)', [match.id, player.id, 'A']);
                 for (const player of teamB) await dbRun('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)', [match.id, player.id, 'B']);
 
-                const nextAvailableTime = new Date(matchStartTime.getTime() + 90 * 60 * 1000);
+                const nextAvailableTime = new Date(matchStartTime.getTime() + (tournament.setting.match_duration || 90) * 60 * 1000);
                 courtAvailability.set(assignedCourt.id, nextAvailableTime);
                 courtIndex = (courtIndex + 1) % courts.length;
             }
@@ -109,23 +133,19 @@ const tournamentModel = {
     },
 
     generateBracketPhases: function(numPairs) {
-        // Check if numPairs is a power of 2 and at least 2
         if (numPairs < 2 || (numPairs & (numPairs - 1)) !== 0) {
             return [];
         }
 
         let phases = [];
-        let currentLevelPhases = ['F']; // Start with the final
+        let currentLevelPhases = ['F'];
 
-        // Special case for numPairs = 2, as per example
         if (numPairs === 2) {
             return ['F', 'A', 'B'];
         }
 
-        // Add the final phase
         phases.push('F');
 
-        // Generate phases level by level
         while (currentLevelPhases.length < numPairs) {
             let nextLevelPhases = [];
             for (const phase of currentLevelPhases) {
@@ -135,93 +155,43 @@ const tournamentModel = {
                     nextLevelPhases.push(`${phase}-1`, `${phase}-2`);
                 }
             }
-            phases.push(...nextLevelPhases); // Append new phases
+            phases.push(...nextLevelPhases);
             currentLevelPhases = nextLevelPhases;
         }
 
         return phases;
     },
 
-    advanceWinner: async function(tournamentId, matchId, winnerTeamId) {
-        const db = getDb();
-        const dbRun = (sql, params) => new Promise((resolve, reject) => db.run(sql, params, function (err) { if (err) reject(err); else resolve(this); }));
-        const dbGet = (sql, params) => new Promise((resolve, reject) => db.get(sql, params, (err, row) => { if (err) reject(err); else resolve(row); }));
-        const dbAll = (sql, params) => new Promise((resolve, reject) => db.all(sql, params, (err, rows) => { if (err) reject(err); else resolve(rows); }));
-
+    /**
+     * Associates a list of courts with a tournament, replacing any existing associations.
+     * @param {number} tournamentId The ID of the tournament.
+     * @param {number[]} courtIds An array of court IDs to associate with the tournament.
+     * @returns {Promise<{success: boolean}>} A promise that resolves to an object indicating success.
+     * @throws {Error} Throws an error if the database transaction fails.
+     */
+    associateCourtsWithTournament: async function(tournamentId, courtIds) {
         try {
-            const match = await dbGet('SELECT * FROM matches WHERE id = ? AND tournament_id = ?', [matchId, tournamentId]);
-            if (!match || match.phase === 'F') {
-                return { success: true, message: 'Final match or no winner yet.' };
+            await dbRun("BEGIN TRANSACTION;");
+            await dbRun("DELETE FROM tournament_courts WHERE tournament_id = ?", [tournamentId]);
+            for (const courtId of courtIds) {
+                await dbRun("INSERT INTO tournament_courts (tournament_id, court_id) VALUES (?, ?)", [tournamentId, courtId]);
             }
-
-            let parentPhase;
-            let teamSlot;
-
-            const currentMatchPhase = match.phase.trim(); // Trim whitespace
-
-            if (currentMatchPhase === 'F') {
-                return { success: true, message: 'Final match, no further advancement.' };
-            } else if (currentMatchPhase === 'A') { // Semi-final A
-                parentPhase = 'F';
-                teamSlot = 'A';
-            } else if (currentMatchPhase === 'B') { // Semi-final B
-                parentPhase = 'F';
-                teamSlot = 'B';
-            } else { // Other phases (Quarter-finals, etc.)
-                const phaseParts = currentMatchPhase.split('-');
-                const lastPart = phaseParts[phaseParts.length - 1];
-                parentPhase = phaseParts.slice(0, -1).join('-');
-                teamSlot = (parseInt(lastPart) % 2 !== 0) ? 'A' : 'B';
-            }
-
-            const winningPlayers = await dbAll('SELECT player_id FROM match_players WHERE match_id = ? AND team = ?', [matchId, winnerTeamId]);
-            const parentMatch = await dbGet('SELECT id FROM matches WHERE tournament_id = ? AND phase = ?', [tournamentId, parentPhase]);
-            
-            // check if winning players has same team letter and assign opposite
-            const reservedTeamSlot = await dbGet('SELECT team FROM match_players WHERE match_id = ?', [matchId])
-            const oppositeTeamSlot = (reservedTeamSlot && reservedTeamSlot.team === 'A') ? 'B' : 'A';
-            if (parentMatch && winningPlayers.length > 0) {
-                for (const player of winningPlayers) {
-                    await dbRun('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)', [parentMatch.id, player.player_id, oppositeTeamSlot]);
-                }
-            }
+            await dbRun("COMMIT;");
             return { success: true };
         } catch (error) {
-            console.error("Error advancing winner:", error);
+            await dbRun("ROLLBACK;");
+            console.error("Error associating courts with tournament:", error);
             throw error;
         }
     },
 
-    associateCourtsWithTournament: (tournamentId, courtIds, callback) => {
-        const db = getDb();
-        const dbRun = (sql, params) => new Promise((resolve, reject) => db.run(sql, params, function (err) { if (err) reject(err); else resolve(this); }));
-
-        db.serialize(async () => {
-            try {
-                await dbRun("BEGIN TRANSACTION;");
-
-                // First, remove existing associations for this tournament
-                await dbRun("DELETE FROM tournament_courts WHERE tournament_id = ?", [tournamentId]);
-
-                // Then, insert new associations
-                for (const courtId of courtIds) {
-                    await dbRun("INSERT INTO tournament_courts (tournament_id, court_id) VALUES (?, ?)", [tournamentId, courtId]);
-                }
-
-                await dbRun("COMMIT;");
-                callback(null, { success: true });
-            } catch (error) {
-                await dbRun("ROLLBACK;");
-                console.error("Error associating courts with tournament:", error);
-                callback(error);
-            }
-        });
-    },
-
+    /**
+     * Retrieves all matches for a given tournament, enriching each match object with player details for team A and team B.
+     * @param {number} tournamentId The ID of the tournament.
+     * @returns {Promise<object[]>} A promise that resolves to an array of match objects, each with a `players` property.
+     * @throws {Error} Throws an error if the database query fails.
+     */
     getMatchesWithPlayersByTournament: async (tournamentId) => {
-        const db = getDb();
-        const dbAll = (sql, params) => new Promise((resolve, reject) => db.all(sql, params, (err, rows) => { if (err) reject(err); else resolve(rows); }));
-
         try {
             const matches = await dbAll('SELECT * FROM matches WHERE tournament_id = ? ORDER BY id', [tournamentId]);
             
@@ -246,123 +216,163 @@ const tournamentModel = {
         }
     },
 
-    getMatchById: (id, callback) => {
-        const db = getDb();
-        db.get('SELECT * FROM matches WHERE id = ?', [id], (err, row) => {
-            callback(err, row);
-        });
+    getMatchById: async function(id) {
+        try {
+            return await dbGet('SELECT * FROM matches WHERE id = ?', [id]);
+        } catch (error) {
+            console.error("Error getting match by id:", error);
+            throw error;
+        }
     },
 
-    getTournamentById: (id, callback) => {
-        const db = getDb();
-        db.get('SELECT * FROM Tournaments WHERE id = ?', [id], (err, row) => {
-            callback(err, row);
-        });
+    getTournamentById: async function(id) {
+        try {
+            let tournament = await dbGet('SELECT * FROM Tournaments WHERE id = ?', [id]);
+            return _parseTournamentSettings(tournament);
+        } catch (error) {
+            console.error("Error getting tournament by id:", error);
+            throw error;
+        }
     },
 
-    getTournamentsByClubId: (clubId, callback) => {
-        const db = getDb();
-        db.all('SELECT * FROM Tournaments WHERE club_id = ?', [clubId], (err, rows) => {
-            callback(err, rows);
-        });
+    /**
+     * Retrieves all tournaments associated with a specific club ID.
+     * @param {number} clubId The ID of the club.
+     * @returns {Promise<object[]>} A promise that resolves to an array of tournament objects.
+     * @throws {Error} Throws an error if the database query fails.
+     */
+    getTournamentsByClubId: async function(clubId) {
+        try {
+            let tournaments = await dbAll('SELECT * FROM Tournaments WHERE club_id = ?', [clubId]);
+            return tournaments.map(_parseTournamentSettings);
+        } catch (error) {
+            console.error("Error getting tournaments by club id:", error);
+            throw error;
+        }
     },
 
-    createTournament: (tournamentData, callback) => {
-        const db = getDb();
-        const { club_id, name, description, type, start_date, end_date } = tournamentData;
-        db.run('INSERT INTO Tournaments (club_id, name, description, type, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)',
-            [club_id, name, description, type, start_date, end_date],
-            function(err) {
-                callback(err, { id: this.lastID });
-            }
-        );
+    /**
+     * Creates a new tournament in the database.
+     * @param {object} tournamentData The data for the new tournament.
+     * @param {number} tournamentData.club_id The ID of the club hosting the tournament.
+     * @param {string} tournamentData.name The name of the tournament.
+     * @param {string} tournamentData.description A description of the tournament.
+     * @param {string} tournamentData.type The type of tournament (e.g., 'eliminacion', 'americana').
+     * @param {string} tournamentData.start_date The start date of the tournament (YYYY-MM-DD).
+     * @param {string} tournamentData.end_date The end date of the tournament (YYYY-MM-DD).
+     * @param {object} [tournamentData.setting] Optional JSON settings for the tournament.
+     * @returns {Promise<{id: number}>} A promise that resolves to an object containing the ID of the new tournament.
+     * @throws {Error} Throws an error if the database insert fails.
+     */
+    createTournament: async function(tournamentData) {
+        const { club_id, name, description, type, start_date, end_date, setting } = tournamentData;
+        const settingJSON = JSON.stringify(setting || { match_duration: 60 });
+        try {
+            const result = await dbRun('INSERT INTO Tournaments (club_id, name, description, type, start_date, end_date, setting) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [club_id, name, description, type, start_date, end_date, settingJSON]);
+            return { id: result.lastID };
+        } catch (error) {
+            console.error("Error creating tournament:", error);
+            throw error;
+        }
     },
 
-    updateTournament: (id, name, description, type, start_date, end_date, callback) => {
-        const db = getDb();
-        db.run('UPDATE tournaments SET name = ?, description = ?, type = ?, start_date = ?, end_date = ? WHERE id = ?', 
-            [name, description, type, start_date, end_date, id], 
-            function(err) {
-                callback(err, { changes: this.changes });
-            }
-        );
+    updateTournament: async function(id, tournamentData) {
+        const { name, description, type, start_date, end_date, setting } = tournamentData;
+        const settingJSON = JSON.stringify(setting);
+        try {
+            const result = await dbRun('UPDATE Tournaments SET name = ?, description = ?, type = ?, start_date = ?, end_date = ?, setting = ? WHERE id = ?', 
+                [name, description, type, start_date, end_date, settingJSON, id]);
+            return { changes: result.changes };
+        } catch (error) {
+            console.error("Error updating tournament:", error);
+            throw error;
+        }
     },
 
-    deleteTournament: (id, callback) => {
-        const db = getDb();
-        db.run('DELETE FROM Tournaments WHERE id = ?', [id], function(err) {
-            callback(err, { changes: this.changes });
-        });
+    deleteTournament: async function(id) {
+        try {
+            const result = await dbRun('DELETE FROM Tournaments WHERE id = ?', [id]);
+            return { changes: result.changes };
+        } catch (error) {
+            console.error("Error deleting tournament:", error);
+            throw error;
+        }
     },
 
-    addPlayerToTournament: (tournamentId, playerId, callback) => {
-        const db = getDb();
+    addPlayerToTournament: async function(tournamentId, playerId) {
         const sql = "INSERT INTO tournament_players (tournament_id, player_id) VALUES (?, ?)";
-        db.run(sql, [tournamentId, playerId], function(err) {
-            callback(err, { lastID: this.lastID });
-        });
+        try {
+            const result = await dbRun(sql, [tournamentId, playerId]);
+            return { lastID: result.lastID };
+        } catch (error) {
+            console.error("Error adding player to tournament:", error);
+            throw error;
+        }
     },
 
-    addPlayerGroupToTournament: (tournamentId, playerIds, teamId, callback) => {
-        const db = getDb();
+    addPlayerGroupToTournament: async function(tournamentId, playerIds, teamId) {
         const sql = "INSERT INTO tournament_players (tournament_id, player_id, players_team_id) VALUES (?, ?, ?)";
-        
-        db.serialize(() => {
-            db.run("BEGIN TRANSACTION;");
-
-            const stmt = db.prepare(sql);
-            stmt.run(tournamentId, playerIds[0], teamId);
-            stmt.run(tournamentId, playerIds[1], teamId);
-            stmt.finalize((err) => {
-                if (err) {
-                    db.run("ROLLBACK;");
-                    callback(err);
-                } else {
-                    db.run("COMMIT;");
-                    callback(null, { success: true });
-                }
-            });
-        });
+        try {
+            await dbRun("BEGIN TRANSACTION;");
+            await dbRun(sql, [tournamentId, playerIds[0], teamId]);
+            await dbRun(sql, [tournamentId, playerIds[1], teamId]);
+            await dbRun("COMMIT;");
+            return { success: true };
+        } catch (error) {
+            await dbRun("ROLLBACK;");
+            console.error("Error adding player group to tournament:", error);
+            throw error;
+        }
     },
 
-    getPlayersByTournament: (tournamentId, callback) => {
-        const db = getDb();
+    getPlayersByTournament: async function(tournamentId) {
         const sql = `
             SELECT p.*, tp.players_team_id
             FROM players p
             JOIN tournament_players tp ON p.id = tp.player_id
             WHERE tp.tournament_id = ?
         `;
-        db.all(sql, [tournamentId], callback);
+        try {
+            return await dbAll(sql, [tournamentId]);
+        } catch (error) {
+            console.error("Error getting players by tournament:", error);
+            throw error;
+        }
     },
 
-    removePlayerFromTournament: (tournamentId, playerId, callback) => {
-        const db = getDb();
+    removePlayerFromTournament: async function(tournamentId, playerId) {
         const sql = "DELETE FROM tournament_players WHERE tournament_id = ? AND player_id = ?";
-        db.run(sql, [tournamentId, playerId], function(err) {
-            callback(err, { changes: this.changes });
-        });
+        try {
+            const result = await dbRun(sql, [tournamentId, playerId]);
+            return { changes: result.changes };
+        } catch (error) {
+            console.error("Error removing player from tournament:", error);
+            throw error;
+        }
     },
 
-    removePlayerGroupFromTournament: (tournamentId, teamId, callback) => {
-        const db = getDb();
+    removePlayerGroupFromTournament: async function(tournamentId, teamId) {
         const sql = "DELETE FROM tournament_players WHERE tournament_id = ? AND players_team_id = ?";
-        db.run(sql, [tournamentId, teamId], function(err) {
-            callback(err, { changes: this.changes });
-        });
+        try {
+            const result = await dbRun(sql, [tournamentId, teamId]);
+            return { changes: result.changes };
+        } catch (error) {
+            console.error("Error removing player group from tournament:", error);
+            throw error;
+        }
     },
 
-    updateTournamentStatus: (id, status, callback) => {
-        const db = getDb();
-        db.run('UPDATE tournaments SET status = ? WHERE id = ?',
-            [status, id],
-            function(err) {
-                if (typeof callback === 'function') {
-                    callback(err, { changes: this.changes });
-                }
-            }
-        );
-    }
+    updateTournamentStatus: async function(id, status) {
+        try {
+            const result = await dbRun('UPDATE tournaments SET status = ? WHERE id = ?', [status, id]);
+            return { changes: result.changes };
+        } catch (error) {
+            console.error("Error updating tournament status:", error);
+            throw error;
+        }
+    },
+
 };
 
 module.exports = tournamentModel;

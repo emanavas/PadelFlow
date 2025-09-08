@@ -1,43 +1,28 @@
-const { getDb } = require('../db/database');
+const { dbRun, dbGet, dbAll } = require('../db/dbHelpers');
 
 const userModel = {
-    createUser: (name, email, password, role, club_id, callback) => {
-        const db = getDb();
-        db.run('INSERT INTO Users (name, email, password, role, club_id) VALUES (?, ?, ?, ?, ?)', 
-            [name, email, password, role, club_id], 
-            function(err) {
-                callback(err, { id: this.lastID });
-            }
-        );
+    async createUser(name, email, password, role, club_id) {
+        const sql = 'INSERT INTO Users (name, email, password, role, club_id) VALUES (?, ?, ?, ?, ?)';
+        return dbRun(sql, [name, email, password, role, club_id]);
     },
 
-    findUserByEmail: (email, callback) => {
-        const db = getDb();
-        db.get('SELECT * FROM Users WHERE email = ?', [email], (err, row) => {
-            callback(err, row);
-        });
+    async findUserByEmail(email) {
+        return dbGet('SELECT * FROM Users WHERE email = ?', [email]);
     },
 
-    findUserById: (id, callback) => {
-        const db = getDb();
-        db.get('SELECT * FROM Users WHERE id = ?', [id], (err, row) => {
-            callback(err, row);
-        });
+    async findUserById(id) {
+        return dbGet('SELECT * FROM Users WHERE id = ?', [id]);
     },
 
-    getAllUsers: (callback) => {
-        const db = getDb();
-        db.all('SELECT U.*, C.name AS club_name FROM Users U LEFT JOIN Clubs C ON U.club_id = C.id', [], (err, rows) => {
-            callback(err, rows);
-        });
+    async getAllUsers() {
+        const sql = 'SELECT U.*, C.name AS club_name FROM Users U LEFT JOIN Clubs C ON U.club_id = C.id';
+        return dbAll(sql);
     },
 
-    updateUser: (id, fields, callback) => {
-        const db = getDb();
+    async updateUser(id, fields) {
         const updates = [];
         const params = [];
 
-        // Build the SET clause dynamically based on the fields provided
         for (const key in fields) {
             if (fields[key] !== undefined) {
                 updates.push(`${key} = ?`);
@@ -46,16 +31,12 @@ const userModel = {
         }
 
         if (updates.length === 0) {
-            return callback(null, { changes: 0 }); // No fields to update
+            return { changes: 0 };
         }
 
-        params.push(id); // Add id for the WHERE clause
-
+        params.push(id);
         const sql = `UPDATE Users SET ${updates.join(', ')} WHERE id = ?`;
-
-        db.run(sql, params, function(err) {
-            callback(err, { changes: this.changes });
-        });
+        return dbRun(sql, params);
     }
 };
 

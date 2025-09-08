@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
     type TEXT NOT NULL, -- Tipo de torneo: 'elimination', 'round_robin', etc.
     status TEXT DEFAULT 'pending',
     start_date TIMESTAMP,
+    setting TEXT DEFAULT '{"match_duration": 90}',
     end_date TIMESTAMP,
     club_id INTEGER NOT NULL,
     FOREIGN KEY(club_id) REFERENCES clubs(id)
@@ -48,7 +49,12 @@ CREATE TABLE IF NOT EXISTS tournaments (
 CREATE TABLE IF NOT EXISTS matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     phase TEXT,
-    score TEXT,
+    score_teamA_set1 INTEGER,
+    score_teamA_set2 INTEGER,
+    score_teamA_set3 INTEGER,
+    score_teamB_set1 INTEGER,
+    score_teamB_set2 INTEGER,
+    score_teamB_set3 INTEGER,
     team_winner TEXT, -- Referencia al equipo ganador (ej. 'A' or 'B')
     start_timestamp TIMESTAMP,
     end_timestamp TIMESTAMP,
@@ -73,7 +79,9 @@ CREATE TABLE IF NOT EXISTS match_players (
     player_id INTEGER NOT NULL,
     match_id INTEGER NOT NULL,
     team TEXT NOT NULL, -- Equipo del jugador en el partido (ej. 'A', 'B')
+    winner_from TEXT, 
     PRIMARY KEY (player_id, match_id),
+    FOREIGN KEY (winner_from) REFERENCES matches(id) ON DELETE CASCADE,
     FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
     FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE
 );

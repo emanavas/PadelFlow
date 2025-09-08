@@ -23,6 +23,60 @@
             display: flex;
             justify-content: flex-end;
         }
+
+        .bracket {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .round {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            margin-right: 40px;
+            min-width: 250px;
+        }
+
+        .match {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .match-connector {
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            width: 20px;
+            height: 2px;
+            background-color: #ccc;
+        }
+
+        .match-connector-branch {
+            position: absolute;
+            top: 50%;
+            left: -20px;
+            width: 20px;
+            height: 2px;
+            background-color: #ccc;
+        }
+
+        .round-connector-left {
+            position: absolute;
+            width: 2px;
+            background-color: #ccc;
+            left: -22px;
+            /* Half of margin-right */
+        }
+
+        .round-connector-right {
+            position: absolute;
+            width: 2px;
+            background-color: #ccc;
+            right: -22px;
+            /* Half of margin-right */
+        }
     </style>
 </head>
 
@@ -33,16 +87,16 @@
                 <div class="main flex-grow-1">
                     <main class="container-fluid p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h1 class="h3 mb-0">Gestionar Torneo: <%= tournament.name %>
+                            <h1 class="h3 mb-0">Gestionar Torneo: <%= viewModel.tournament.name %>
                             </h1>
                             <div>
-                                <form action="/club/tournaments/<%= tournament.id %>/delete" method="POST"
+                                <form action="/club/tournaments/<%= viewModel.tournament.id %>/delete" method="POST"
                                     class="d-inline"
                                     onsubmit="return confirm('¿Estás seguro de que quieres borrar este torneo? Esta acción no se puede deshacer.');">
                                     <button type="submit" class="btn btn-danger me-2"><i
                                             class="fas fa-trash-alt me-1"></i> Borrar</button>
                                 </form>
-                                <a href="/club/tournaments/<%= tournament.id %>/edit"
+                                <a href="/club/tournaments/<%= viewModel.tournament.id %>/edit"
                                     class="btn btn-outline-primary me-2"><i class="fas fa-pencil-alt me-1"></i> Editar
                                     Torneo</a>
                                 <a href="/club/dashboard" class="btn btn-secondary"><i
@@ -57,24 +111,31 @@
                             </div>
                             <div class="card-body">
                                 <p><strong>Descripción:</strong>
-                                    <%= tournament.description || 'No hay descripción.' %>
+                                    <%= viewModel.tournament.description || 'No hay descripción.' %>
                                 </p>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <p><strong>Tipo:</strong> <span class="badge bg-secondary">
-                                                <%= tournament.type %>
+                                                <%= viewModel.tournament.type %>
                                             </span></p>
                                     </div>
-                                    <div class="col-md-4">
-                                        <p><strong>Fecha de Inicio:</strong>
-                                            <%= new Date(tournament.start_date).toLocaleString('es-ES', {
+                                    <div class="col-md-3">
+                                        <p><strong>Duración:</strong>
+                                            <%= viewModel.tournament.setting.match_duration %> min
+                                        </p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p><strong>Inicio:</strong>
+                                            <%= new Date(viewModel.tournament.start_date).toLocaleString('es-ES', {
                                                 year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' ,
                                                 minute: '2-digit' }) %>
                                         </p>
                                     </div>
-                                    <div class="col-md-4">
-                                        <p><strong>Fecha de Fin:</strong>
-                                            <%= new Date(tournament.end_date).toLocaleDateString() %>
+                                    <div class="col-md-3">
+                                        <p><strong>Fin:</strong>
+                                            <%= new Date(viewModel.tournament.end_date).toLocaleString('es-ES', {
+                                                year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' ,
+                                                minute: '2-digit' }) %>
                                         </p>
                                     </div>
                                 </div>
@@ -82,7 +143,7 @@
                         </div>
 
                         <!-- Player Management (Conditional) -->
-                        <% if (tournament.status==='pending' ) { %>
+                        <% if (viewModel.view.isPending) { %>
                             <div class="row mb-4">
                                 <!-- Registered Players -->
                                 <div class="col-md-6">
@@ -92,7 +153,7 @@
                                         </div>
                                         <div class="card-body">
                                             <% const groupedPlayers={}; const ungroupedPlayers=[];
-                                                registeredPlayers.forEach(p=> {
+                                                viewModel.registeredPlayers.forEach(p=> {
                                                 if (p.players_team_id) {
                                                 if (!groupedPlayers[p.players_team_id]) {
                                                 groupedPlayers[p.players_team_id] = [];
@@ -119,7 +180,7 @@
                                                                         <% }); %>
                                                                 </div>
                                                                 <form
-                                                                    action="/club/tournaments/<%= tournament.id %>/ungroup/<%= team[0].players_team_id %>"
+                                                                    action="/club/tournaments/<%= viewModel.tournament.id %>/ungroup/<%= team[0].players_team_id %>"
                                                                     method="POST"
                                                                     onsubmit="return confirm('¿Estás seguro de que quieres desagrupar a estos jugadores?');">
                                                                     <button type="submit"
@@ -144,7 +205,7 @@
                                                                             class="list-group-item d-flex justify-content-between align-items-center">
                                                                             <%= player.name %>
                                                                                 <form
-                                                                                    action="/club/tournaments/<%= tournament.id %>/remove_player/<%= player.id %>"
+                                                                                    action="/club/tournaments/<%= viewModel.tournament.id %>/remove_player/<%= player.id %>"
                                                                                     method="POST"
                                                                                     onsubmit="return confirm('¿Estás seguro de que quieres eliminar a este jugador del torneo?');">
                                                                                     <button type="submit"
@@ -172,7 +233,8 @@
                                         <div class="card-body">
                                             <label for="playerSearch" class="form-label">Buscar Jugador</label>
                                             <input type="text" id="playerSearch" class="form-control mb-2"
-                                                placeholder="Buscar jugadores..." autocomplete="off">
+                                                placeholder="Buscar jugadores..." autocomplete="off"
+                                                data-tournament-id="<%= viewModel.tournament.id %>">
                                             <div id="playerList" class="list-group mb-2"
                                                 style="max-height: 300px; overflow-y: auto;"></div>
                                         </div>
@@ -186,516 +248,376 @@
                             <% } %>
 
                                 <!-- Active Tournament Matches (Conditional) -->
-                                <% if (tournament.status==='active' && matches && matches.length> 0) { %>
-                                    <div class="card mb-4">
-                                        <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h5><i class="fas fa-volleyball-ball me-2"></i>Partidos de la Ronda Actual
-                                            </h5>
-                                            <form method="POST"
-                                                action="/club/tournaments/<%= tournament.id %>/next_round"
-                                                class="d-inline">
-                                                <input type="hidden" name="currentRound"
-                                                    value="<%= (matches[0] && matches[0].phase && matches[0].phase.match(/\d+/)) ? matches[0].phase.match(/\d+/)[0] : 1 %>">
-                                                <button type="submit" class="btn btn-success btn-sm"><i
-                                                        class="fas fa-forward me-1"></i>Generar siguiente ronda</button>
-                                            </form>
-                                        </div>
-                                        <div class="card-body">
-                                            <table class="table table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>Pista</th>
-                                                        <th>Equipo A</th>
-                                                        <th>Equipo B</th>
-                                                        <th>Fase</th>
-                                                        <th>Ganador</th>
-                                                        <th>Acción</th>
-                                                        <th>Acción</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <% matches.forEach(function(match, idx) { %>
-                                                        <tr>
-                                                            <td>
-                                                                <%= idx+1 %>
-                                                            </td>
-                                                            <td>
-                                                                <%= match.court_id || '-' %>
-                                                            </td>
-                                                            <td>
-                                                                <% match?.players?.teamA?.forEach(function(player) { %>
-                                                                    <span class="badge bg-primary me-1">
-                                                                        <%= player.name %>
-                                                                    </span>
-                                                                    <% }); %>
-                                                            </td>
-                                                            <td>
-                                                                <% match?.players?.teamB?.forEach(function(player) { %>
-                                                                    <span class="badge bg-success me-1">
-                                                                        <%= player.name %>
-                                                                    </span>
-                                                                    <% }); %>
-                                                            </td>
-                                                            <td>
-                                                                <%- phaseLabel(match.phase) %>
-                                                            </td>
-                                                            <td>
-                                                                <%= match.score || '-' %>
-                                                            </td>
-                                                            <td>
-                                                                <% if (match.score) { var setsA=0, setsB=0;
-                                                                    match.score.split(',').forEach(function(setStr) {
-                                                                    var parts=setStr.trim().split('-'); var
-                                                                    a=parseInt(parts[0],10), b=parseInt(parts[1],10); if
-                                                                    (!isNaN(a) && !isNaN(b)) { if (a> b) setsA++;
-                                                                    else if (b > a) setsB++;
-                                                                    }
-                                                                    });
-                                                                    if (setsA > setsB) { %>
-                                                                    <span class="badge bg-primary">Equipo A</span>
-                                                                    <% } else if (setsB> setsA) { %>
-                                                                        <span class="badge bg-success">Equipo B</span>
-                                                                        <% } else { %>
-                                                                            <span
-                                                                                class="badge bg-secondary">Empate</span>
-                                                                            <% } } else { %>
-                                                                                <span class="text-muted">-</span>
-                                                                                <% } %>
-                                                            </td>
-                                                            <td>
-                                                                <button class="btn btn-sm btn-warning"
-                                                                    data-bs-toggle="modal" data-bs-target="#scoreModal"
-                                                                    data-match-id="<%= match.id %>"
-                                                                    data-match-idx="<%= idx+1 %>">Registrar
-                                                                    resultado</button>
-                                                            </td>
-                                                        </tr>
-                                                        <% }); %>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <!-- Modal para registrar resultado -->
-                                    <div class="modal fade" id="scoreModal" tabindex="-1"
-                                        aria-labelledby="scoreModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <form id="scoreForm" method="POST"
-                                                    action="/club/matches/register_score">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title" id="scoreModalLabel">Registrar resultado
-                                                            del partido <span id="modalMatchNumber"></span></h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
+                                <% if (viewModel.view.isActive && viewModel.matches && viewModel.matches.length> 0) { %>
+                                    <% if (viewModel.view.isElimination) { %>
+                                        <%- include('partials/tournament_elimination_view', { bracketData:
+                                            viewModel.bracketData, phaseLabel: viewModel.phaseLabel, roundsA:
+                                            viewModel.roundsA, roundsB: viewModel.roundsB }) %>
+                                            <% } else { %>
+                                                <div class="card mb-4">
+                                                    <div
+                                                        class="card-header d-flex justify-content-between align-items-center">
+                                                        <h5><i class="fas fa-volleyball-ball me-2"></i>Partidos de la
+                                                            Ronda
+                                                            Actual</h5>
+                                                        <form method="POST"
+                                                            action="/club/tournaments/<%= viewModel.tournament.id %>/next_round"
+                                                            class="d-inline">
+                                                            <input type="hidden" name="currentRound"
+                                                                value="<%= (viewModel.matches[0] && viewModel.matches[0].phase && viewModel.matches[0].phase.match(/\d+/)) ? viewModel.matches[0].phase.match(/\d+/)[0] : 1 %>">
+                                                            <button type="submit" class="btn btn-success btn-sm"><i
+                                                                    class="fas fa-forward me-1"></i>Generar siguiente
+                                                                ronda</button>
+                                                        </form>
                                                     </div>
-                                                    <div class="modal-body">
-                                                        <input type="hidden" name="match_id" id="modalMatchId">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Marcador por set</label>
-                                                            <div class="row g-2 mb-2">
-                                                                <div class="col-5">
-                                                                    <input type="number" min="0" class="form-control"
-                                                                        name="set1_teamA" id="set1_teamA"
-                                                                        placeholder="Equipo A Set 1" required>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <% viewModel.matches.forEach(function(match, idx) { %>
+                                                                <div class="col-md-6 col-lg-4 mb-4">
+                                                                    <div class="card h-100">
+                                                                        <div
+                                                                            class="card-header d-flex justify-content-between align-items-center">
+                                                                            <h6 class="mb-0">Partido <%= idx + 1 %>
+                                                                            </h6>
+                                                                            <%- match.phaseLabel %>
+                                                                        </div>
+                                                                        <div class="card-body">
+                                                                            <p class="card-text"><strong>Pista:</strong>
+                                                                                <%= match.court_id || '-' %>
+                                                                            </p>
+                                                                            <div class="mb-3">
+                                                                                <strong>Equipo A:</strong>
+                                                                                <div>
+                                                                                    <% match?.players?.teamA?.forEach(function(player)
+                                                                                        { %>
+                                                                                        <span
+                                                                                            class="badge bg-primary me-1">
+                                                                                            <%= player.name %>
+                                                                                        </span>
+                                                                                        <% }); %>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="mb-3">
+                                                                                <strong>Equipo B:</strong>
+                                                                                <div>
+                                                                                    <% match?.players?.teamB?.forEach(function(player)
+                                                                                        { %>
+                                                                                        <span
+                                                                                            class="badge bg-success me-1">
+                                                                                            <%= player.name %>
+                                                                                        </span>
+                                                                                        <% }); %>
+                                                                                </div>
+                                                                            </div>
+                                                                            <p class="card-text">
+                                                                                <strong>Resultado:</strong>
+                                                                                <%= match.score || '-' %>
+                                                                            </p>
+                                                                            <div>
+                                                                                <strong>Ganador:</strong>
+                                                                                <% if (match.score) { var setsA=0,
+                                                                                    setsB=0;
+                                                                                    match.score.split(',').forEach(function(setStr)
+                                                                                    { var
+                                                                                    parts=setStr.trim().split('-'); var
+                                                                                    a=parseInt(parts[0],10),
+                                                                                    b=parseInt(parts[1],10); if
+                                                                                    (!isNaN(a) && !isNaN(b)) { if (a> b)
+                                                                                    setsA++;
+                                                                                    else if (b > a) setsB++;
+                                                                                    }
+                                                                                    });
+                                                                                    if (setsA > setsB) { %>
+                                                                                    <span
+                                                                                        class="badge bg-primary">Equipo
+                                                                                        A</span>
+                                                                                    <% } else if (setsB> setsA) { %>
+                                                                                        <span
+                                                                                            class="badge bg-success">Equipo
+                                                                                            B</span>
+                                                                                        <% } else { %>
+                                                                                            <span
+                                                                                                class="badge bg-secondary">Empate</span>
+                                                                                            <% } } else { %>
+                                                                                                <span
+                                                                                                    class="text-muted">-</span>
+                                                                                                <% } %>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="card-footer text-center">
+                                                                            <button class="btn btn-sm btn-warning"
+                                                                                data-bs-toggle="modal"
+                                                                                data-bs-target="#scoreModal"
+                                                                                data-match-id="<%= match.id %>"
+                                                                                data-match-idx="<%= idx+1 %>">Registrar
+                                                                                resultado</button>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div class="col-2 text-center">-</div>
-                                                                <div class="col-5">
-                                                                    <input type="number" min="0" class="form-control"
-                                                                        name="set1_teamB" id="set1_teamB"
-                                                                        placeholder="Equipo B Set 1" required>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row g-2 mb-2">
-                                                                <div class="col-5">
-                                                                    <input type="number" min="0" class="form-control"
-                                                                        name="set2_teamA" id="set2_teamA"
-                                                                        placeholder="Equipo A Set 2" required>
-                                                                </div>
-                                                                <div class="col-2 text-center">-</div>
-                                                                <div class="col-5">
-                                                                    <input type="number" min="0" class="form-control"
-                                                                        name="set2_teamB" id="set2_teamB"
-                                                                        placeholder="Equipo B Set 2" required>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row g-2 mb-2">
-                                                                <div class="col-5">
-                                                                    <input type="number" min="0" class="form-control"
-                                                                        name="set3_teamA" id="set3_teamA"
-                                                                        placeholder="Equipo A Set 3">
-                                                                </div>
-                                                                <div class="col-2 text-center">-</div>
-                                                                <div class="col-5">
-                                                                    <input type="number" min="0" class="form-control"
-                                                                        name="set3_teamB" id="set3_teamB"
-                                                                        placeholder="Equipo B Set 3">
-                                                                </div>
+                                                                <% }); %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <% } %>
+                                                    <!-- Modal para registrar resultado -->
+                                                    <div class="modal fade" id="scoreModal" tabindex="-1"
+                                                        aria-labelledby="scoreModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <form id="scoreForm" method="POST"
+                                                                    action="/club/matches/register_score">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="scoreModalLabel">
+                                                                            Registrar resultado
+                                                                            del partido <span
+                                                                                id="modalMatchNumber"></span>
+                                                                        </h5>
+                                                                        <button type="button" class="btn-close"
+                                                                            data-bs-dismiss="modal"
+                                                                            aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <input type="hidden" name="match_id"
+                                                                            id="modalMatchId">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label">Marcador por
+                                                                                set</label>
+                                                                            <div class="row g-2 mb-2">
+                                                                                <div class="col-5">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control"
+                                                                                        name="set1_teamA"
+                                                                                        id="set1_teamA"
+                                                                                        placeholder="Equipo A Set 1"
+                                                                                        required>
+                                                                                </div>
+                                                                                <div class="col-2 text-center">-</div>
+                                                                                <div class="col-5">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control"
+                                                                                        name="set1_teamB"
+                                                                                        id="set1_teamB"
+                                                                                        placeholder="Equipo B Set 1"
+                                                                                        required>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row g-2 mb-2">
+                                                                                <div class="col-5">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control"
+                                                                                        name="set2_teamA"
+                                                                                        id="set2_teamA"
+                                                                                        placeholder="Equipo A Set 2"
+                                                                                        required>
+                                                                                </div>
+                                                                                <div class="col-2 text-center">-</div>
+                                                                                <div class="col-5">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control"
+                                                                                        name="set2_teamB"
+                                                                                        id="set2_teamB"
+                                                                                        placeholder="Equipo B Set 2"
+                                                                                        required>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row g-2 mb-2">
+                                                                                <div class="col-5">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control"
+                                                                                        name="set3_teamA"
+                                                                                        id="set3_teamA"
+                                                                                        placeholder="Equipo A Set 3">
+                                                                                </div>
+                                                                                <div class="col-2 text-center">-</div>
+                                                                                <div class="col-5">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control"
+                                                                                        name="set3_teamB"
+                                                                                        id="set3_teamB"
+                                                                                        placeholder="Equipo B Set 3">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary"
+                                                                            data-bs-dismiss="modal">Cancelar</button>
+                                                                        <button type="submit"
+                                                                            class="btn btn-primary">Guardar
+                                                                            resultado</button>
+                                                                    </div>
+                                                                </form>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary"
-                                                            data-bs-dismiss="modal">Cancelar</button>
-                                                        <button type="submit" class="btn btn-primary">Guardar
-                                                            resultado</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <script>
-                                        var scoreModal = document.getElementById('scoreModal');
-                                        scoreModal.addEventListener('show.bs.modal', function (event) {
-                                            var button = event.relatedTarget;
-                                            var matchId = button.getAttribute('data-match-id');
-                                            var matchIdx = button.getAttribute('data-match-idx');
-                                            document.getElementById('modalMatchId').value = matchId;
-                                            document.getElementById('modalMatchNumber').textContent = matchIdx;
-                                            // Limpiar inputs
-                                            ['set1_teamA', 'set1_teamB', 'set2_teamA', 'set2_teamB', 'set3_teamA', 'set3_teamB'].forEach(function (id) {
-                                                document.getElementById(id).value = '';
-                                            });
-                                        });
-                                    </script>
-                                    <% } %>
-
-                                        <!-- Completed Tournament Summary (Conditional) -->
-                                        <% if (tournament.status==='completed' ) { %>
-                                            <div class="card mb-4">
-                                                <div class="card-header">
-                                                    <h5><i class="fas fa-trophy me-2"></i>Torneo Finalizado</h5>
-                                                </div>
-                                                <div class="card-body">
-                                                    <p class="text-muted">Aquí se mostrará el resumen final del
-                                                        torneo y los resultados.</p>
-                                                    <!-- Final standings/results will go here -->
-                                                </div>
-                                            </div>
-                                            <% } %>
-
-                                                <!-- Courts Used Section -->
-                                                <div class="card mb-4">
-                                                    <div class="card-header">
-                                                        <h5><i class="fas fa-table-tennis me-2"></i>Pistas
-                                                            Utilizadas</h5>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p class="mb-2"><strong>Pistas asociadas:</strong>
-                                                            <%= courts ? courts.length : 0 %>
-                                                        </p>
-                                                        <% if (courts && courts.length> 0) { %>
-                                                            <ul class="list-group">
-                                                                <% courts.forEach(function(court) { %>
-                                                                    <li class="list-group-item">
-                                                                        <%= court.name %>
-                                                                    </li>
-                                                                    <% }); %>
-                                                            </ul>
-                                                            <% } else { %>
-                                                                <p class="text-muted">No hay pistas asociadas a
-                                                                    este torneo.</p>
-                                                                <% } %>
-                                                    </div>
-                                                </div>
-
-                                                <% if (tournament.status==='pending' ) { %>
-                                                    <div class="text-end mt-4">
-                                                        <form action="/club/tournaments/<%= tournament.id %>/start"
-                                                            method="POST"
-                                                            onsubmit="return confirm('¿Estás seguro de que quieres comenzar este torneo? Una vez iniciado, no podrás añadir ni eliminar jugadores.');">
-                                                            <button type="submit" class="btn btn-success btn-lg"><i
-                                                                    class="fas fa-play-circle me-2"></i>Comenzar
-                                                                Torneo</button>
-                                                        </form>
-                                                    </div>
                                                     <% } %>
 
-                                                        <% if (typeof mensaje !=='undefined' && mensaje) { %>
-                                                            <div class="modal fade" id="mensajeModal" tabindex="-1"
-                                                                aria-labelledby="mensajeModalLabel" aria-hidden="true">
-                                                                <div class="modal-dialog">
-                                                                    <div class="modal-content">
-                                                                        <div
-                                                                            class="modal-header bg-<%= mensajeTipo === 'warning' ? 'warning' : 'danger' %>">
-                                                                            <h5 class="modal-title"
-                                                                                id="mensajeModalLabel">
-                                                                                <i
-                                                                                    class="fas fa-exclamation-triangle me-2"></i>
-                                                                                <%= mensajeTipo==='warning' ? 'Aviso'
-                                                                                    : 'Error' %>
-                                                                            </h5>
-                                                                            <button type="button" class="btn-close"
-                                                                                data-bs-dismiss="modal"
-                                                                                aria-label="Cerrar"></button>
-                                                                        </div>
-                                                                        <div class="modal-body">
-                                                                            <%= mensaje %>
-                                                                        </div>
-                                                                        <div class="modal-footer">
-                                                                            <button type="button"
-                                                                                class="btn btn-secondary"
-                                                                                data-bs-dismiss="modal">Cerrar</button>
-                                                                        </div>
-                                                                    </div>
+                                                        <!-- Completed Tournament Summary (Conditional) -->
+                                                        <% if (viewModel.view.isCompleted) { %>
+                                                            <div class="card mb-4">
+                                                                <div class="card-header">
+                                                                    <h5><i class="fas fa-trophy me-2"></i>Torneo
+                                                                        Finalizado
+                                                                    </h5>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <p class="text-muted">Aquí se mostrará el resumen
+                                                                        final
+                                                                        del
+                                                                        torneo y los resultados.</p>
+                                                                    <!-- Final standings/results will go here -->
                                                                 </div>
                                                             </div>
-                                                            <script>
-                                                                document.addEventListener('DOMContentLoaded', function () {
-                                                                    var modal = new bootstrap.Modal(document.getElementById('mensajeModal'));
-                                                                    modal.show();
-                                                                });
-                                                            </script>
                                                             <% } %>
 
-                                                                <!-- Modal para crear grupo de dos jugadores -->
-                                                                <div class="modal fade" id="groupModal" tabindex="-1"
-                                                                    aria-labelledby="groupModalLabel"
-                                                                    aria-hidden="true">
-                                                                    <div class="modal-dialog">
-                                                                        <div class="modal-content">
-                                                                            <form id="groupForm">
-                                                                                <div class="modal-header">
-                                                                                    <h5 class="modal-title"
-                                                                                        id="groupModalLabel">Crear grupo
-                                                                                        de dos jugadores</h5>
-                                                                                    <button type="button"
-                                                                                        class="btn-close"
-                                                                                        data-bs-dismiss="modal"
-                                                                                        aria-label="Cerrar"></button>
-                                                                                </div>
-                                                                                <div class="modal-body">
-                                                                                    <label for="groupPlayerSearch"
-                                                                                        class="form-label">Buscar y
-                                                                                        seleccionar jugadores</label>
-                                                                                    <input type="text"
-                                                                                        id="groupPlayerSearch"
-                                                                                        class="form-control mb-2"
-                                                                                        placeholder="Buscar jugadores..."
-                                                                                        autocomplete="off">
-                                                                                    <div id="groupPlayerList"
-                                                                                        class="list-group mb-2"
-                                                                                        style="max-height: 200px; overflow-y: auto;">
-                                                                                    </div>
-                                                                                    <div class="mb-2">
-                                                                                        <strong>Seleccionados:</strong>
-                                                                                        <ul id="selectedPlayers"
-                                                                                            class="list-group"></ul>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="modal-footer">
-                                                                                    <button type="button"
-                                                                                        class="btn btn-secondary"
-                                                                                        data-bs-dismiss="modal">Cancelar</button>
-                                                                                    <button type="submit"
-                                                                                        class="btn btn-primary"
-                                                                                        id="saveGroupBtn" disabled>Crear
-                                                                                        grupo</button>
-                                                                                </div>
-                                                                            </form>
-                                                                        </div>
+                                                                <!-- Courts Used Section -->
+                                                                <div class="card mb-4">
+                                                                    <div class="card-header">
+                                                                        <h5><i
+                                                                                class="fas fa-table-tennis me-2"></i>Pistas
+                                                                            Utilizadas</h5>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <p class="mb-2"><strong>Pistas
+                                                                                asociadas:</strong>
+                                                                            <%= viewModel.courts ?
+                                                                                viewModel.courts.length : 0 %>
+                                                                        </p>
+                                                                        <% if (viewModel.courts &&
+                                                                            viewModel.courts.length> 0) { %>
+                                                                            <ul class="list-group">
+                                                                                <% viewModel.courts.forEach(function(court)
+                                                                                    { %>
+                                                                                    <li class="list-group-item">
+                                                                                        <%= court.name %>
+                                                                                    </li>
+                                                                                    <% }); %>
+                                                                            </ul>
+                                                                            <% } else { %>
+                                                                                <p class="text-muted">No hay pistas
+                                                                                    asociadas a
+                                                                                    este torneo.</p>
+                                                                                <% } %>
                                                                     </div>
                                                                 </div>
+
+                                                                <% if (viewModel.view.isPending) { %>
+                                                                    <div class="text-end mt-4">
+                                                                        <form
+                                                                            action="/club/tournaments/<%= viewModel.tournament.id %>/start"
+                                                                            method="POST"
+                                                                            onsubmit="return confirm('¿Estás seguro de que quieres comenzar este torneo? Una vez iniciado, no podrás añadir ni eliminar jugadores.');">
+                                                                            <button type="submit"
+                                                                                class="btn btn-success btn-lg"><i
+                                                                                    class="fas fa-play-circle me-2"></i>Comenzar
+                                                                                Torneo</button>
+                                                                        </form>
+                                                                    </div>
+                                                                    <% } %>
+
+                                                                        <% if (typeof mensaje !=='undefined' && mensaje)
+                                                                            { %>
+                                                                            <div class="modal fade" id="mensajeModal"
+                                                                                tabindex="-1"
+                                                                                aria-labelledby="mensajeModalLabel"
+                                                                                aria-hidden="true">
+                                                                                <div class="modal-dialog">
+                                                                                    <div class="modal-content">
+                                                                                        <div
+                                                                                            class="modal-header bg-<%= mensajeTipo === 'warning' ? 'warning' : 'danger' %>">
+                                                                                            <h5 class="modal-title"
+                                                                                                id="mensajeModalLabel">
+                                                                                                <i
+                                                                                                    class="fas fa-exclamation-triangle me-2"></i>
+                                                                                                <%= mensajeTipo==='warning'
+                                                                                                    ? 'Aviso' : 'Error'
+                                                                                                    %>
+                                                                                            </h5>
+                                                                                            <button type="button"
+                                                                                                class="btn-close"
+                                                                                                data-bs-dismiss="modal"
+                                                                                                aria-label="Cerrar"></button>
+                                                                                        </div>
+                                                                                        <div class="modal-body">
+                                                                                            <%= mensaje %>
+                                                                                        </div>
+                                                                                        <div class="modal-footer">
+                                                                                            <button type="button"
+                                                                                                class="btn btn-secondary"
+                                                                                                data-bs-dismiss="modal">Cerrar</button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <% } %>
+
+                                                                                <!-- Modal para crear grupo de dos jugadores -->
+                                                                                <div class="modal fade" id="groupModal"
+                                                                                    tabindex="-1"
+                                                                                    aria-labelledby="groupModalLabel"
+                                                                                    aria-hidden="true"
+                                                                                    data-tournament-id="<%= viewModel.tournament.id %>">
+                                                                                    <div class="modal-dialog">
+                                                                                        <div class="modal-content">
+                                                                                            <form id="groupForm">
+                                                                                                <div
+                                                                                                    class="modal-header">
+                                                                                                    <h5 class="modal-title"
+                                                                                                        id="groupModalLabel">
+                                                                                                        Crear grupo
+                                                                                                        de dos jugadores
+                                                                                                    </h5>
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        class="btn-close"
+                                                                                                        data-bs-dismiss="modal"
+                                                                                                        aria-label="Cerrar"></button>
+                                                                                                </div>
+                                                                                                <div class="modal-body">
+                                                                                                    <label
+                                                                                                        for="groupPlayerSearch"
+                                                                                                        class="form-label">Buscar
+                                                                                                        y
+                                                                                                        seleccionar
+                                                                                                        jugadores</label>
+                                                                                                    <input type="text"
+                                                                                                        id="groupPlayerSearch"
+                                                                                                        class="form-control mb-2"
+                                                                                                        placeholder="Buscar jugadores..."
+                                                                                                        autocomplete="off">
+                                                                                                    <div id="groupPlayerList"
+                                                                                                        class="list-group mb-2"
+                                                                                                        style="max-height: 200px; overflow-y: auto;">
+                                                                                                    </div>
+                                                                                                    <div class="mb-2">
+                                                                                                        <strong>Seleccionados:</strong>
+                                                                                                        <ul id="selectedPlayers"
+                                                                                                            class="list-group">
+                                                                                                        </ul>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div
+                                                                                                    class="modal-footer">
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        class="btn btn-secondary"
+                                                                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                                                                    <button
+                                                                                                        type="submit"
+                                                                                                        class="btn btn-primary"
+                                                                                                        id="saveGroupBtn"
+                                                                                                        disabled>Crear
+                                                                                                        grupo</button>
+                                                                                                </div>
+                                                                                            </form>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
                     </main>
                 </div>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-
-                // --- Grupo de dos jugadores ---
-                const groupPlayerSearch = document.getElementById('groupPlayerSearch');
-                const groupPlayerList = document.getElementById('groupPlayerList');
-                const selectedPlayers = document.getElementById('selectedPlayers');
-                const saveGroupBtn = document.getElementById('saveGroupBtn');
-                const tournamentId = '<%= tournament.id %>';
-                let groupSelected = [];
-
-                async function loadGroupPlayers(query = '') {
-                    let url = `/club/tournaments/${tournamentId}/search_players?limit=20`;
-                    if (query) url += `&q=${encodeURIComponent(query)}`;
-                    const res = await fetch(url);
-                    const players = await res.json();
-                    groupPlayerList.innerHTML = '';
-                    if (players.length === 0) {
-                        groupPlayerList.innerHTML = '<div class="list-group-item text-muted">No hay jugadores disponibles.</div>';
-                        return;
-                    }
-                    players.forEach(player => {
-                        // No mostrar si ya está seleccionado
-                        if (groupSelected.find(p => p.id === player.id)) return;
-                        const item = document.createElement('button');
-                        item.type = 'button';
-                        item.className = 'list-group-item list-group-item-action';
-                        item.textContent = player.name;
-                        item.onclick = function () {
-                            if (groupSelected.length < 2) {
-                                groupSelected.push(player);
-                                renderSelectedPlayers();
-                                loadGroupPlayers(groupPlayerSearch.value);
-                            }
-                        };
-                        groupPlayerList.appendChild(item);
-                    });
-                }
-
-                function renderSelectedPlayers() {
-                    selectedPlayers.innerHTML = '';
-                    groupSelected.forEach((player, idx) => {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                        li.textContent = player.name;
-                        const removeBtn = document.createElement('button');
-                        removeBtn.type = 'button';
-                        removeBtn.className = 'btn btn-sm btn-danger';
-                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                        removeBtn.onclick = function () {
-                            groupSelected.splice(idx, 1);
-                            renderSelectedPlayers();
-                            loadGroupPlayers(groupPlayerSearch.value);
-                        };
-                        li.appendChild(removeBtn);
-                        selectedPlayers.appendChild(li);
-                    });
-                    saveGroupBtn.disabled = groupSelected.length !== 2;
-                }
-
-                if (groupPlayerSearch) {
-                    groupPlayerSearch.addEventListener('input', function () {
-                        loadGroupPlayers(groupPlayerSearch.value);
-                    });
-                }
-
-                // Reset modal on open
-                const groupModal = document.getElementById('groupModal');
-                groupModal.addEventListener('show.bs.modal', function () {
-                    groupPlayerSearch.value = '';
-                    groupSelected = [];
-                    renderSelectedPlayers();
-                    loadGroupPlayers();
-                });
-
-                // Enviar grupo al backend
-                const groupForm = document.getElementById('groupForm');
-                groupForm.addEventListener('submit', async function (e) {
-                    e.preventDefault();
-                    if (groupSelected.length !== 2) return;
-                    const playerIds = groupSelected.map(p => p.id);
-                    const res = await fetch(`/club/tournaments/${tournamentId}/add_group`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ playerIds })
-                    });
-                    if (res.ok) {
-                        // Cerrar modal y recargar inscritos
-                        var modal = bootstrap.Modal.getInstance(groupModal);
-                        modal.hide();
-                        location.reload();
-                    } else {
-                        alert('Error al crear el grupo.');
-                    }
-                });
-
-                // Filter for Registered Players list
-                const searchRegistered = document.getElementById('searchRegistered');
-                if (searchRegistered) {
-                    searchRegistered.addEventListener('keyup', function () {
-                        const filter = searchRegistered.value.toLowerCase();
-                        const listItems = document.querySelectorAll('#registeredPlayersList .list-group-item');
-                        listItems.forEach(item => {
-                            const text = item.textContent || item.innerText;
-                            if (text.toLowerCase().indexOf(filter) > -1) {
-                                item.style.display = '';
-                            } else {
-                                item.style.display = 'none';
-                            }
-                        });
-                    });
-                }
-
-                // Filter for Available Players dropdown
-                const searchAvailable = document.getElementById('searchAvailable');
-                if (searchAvailable) {
-                    searchAvailable.addEventListener('keyup', function () {
-                        const filter = searchAvailable.value.toLowerCase();
-                        const options = document.querySelectorAll('#player option');
-                        options.forEach(option => {
-                            if (option.value === "" || option.disabled) { // Always show placeholder/disabled options
-                                return;
-                            }
-                            const text = option.textContent || option.innerText;
-                            if (text.toLowerCase().indexOf(filter) > -1) {
-                                option.style.display = '';
-                            } else {
-                                option.style.display = 'none';
-                            }
-                        });
-                    });
-                }
-            });
-
-            // Autocompletado y selección múltiple de jugadores
-            document.addEventListener('DOMContentLoaded', function () {
-                const tournamentId = '<%= tournament.id %>';
-                const playerSearch = document.getElementById('playerSearch');
-                const playerList = document.getElementById('playerList');
-                // Carga inicial y búsqueda dinámica
-                async function loadPlayers(query = '') {
-                    let url = `/club/tournaments/${tournamentId}/search_players?limit=20`;
-                    if (query) url += `&q=${encodeURIComponent(query)}`;
-                    const res = await fetch(url);
-                    const players = await res.json();
-                    playerList.innerHTML = '';
-                    if (players.length === 0) {
-                        playerList.innerHTML = '<div class="list-group-item text-muted">No hay jugadores disponibles.</div>';
-                        return;
-                    }
-                    players.forEach(player => {
-                        const item = document.createElement('button');
-                        item.type = 'button';
-                        item.className = 'list-group-item list-group-item-action';
-                        item.textContent = player.name;
-                        item.onclick = function () {
-                            addPlayerToTournament(player.id);
-                        };
-                        playerList.appendChild(item);
-                    });
-                }
-                // Añadir jugador vía AJAX
-                async function addPlayerToTournament(playerId) {
-                    const res = await fetch(`/club/tournaments/${tournamentId}/add_player`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ playerId })
-                    });
-                    if (res.ok) {
-                        loadPlayers(playerSearch.value); // Actualiza el listado tras añadir
-                        // Opcional: recargar la lista de inscritos
-                        location.reload();
-                    } else {
-                        alert('Error al añadir el jugador.');
-                    }
-                }
-                if (playerSearch) {
-                    playerSearch.addEventListener('input', function () {
-                        loadPlayers(playerSearch.value);
-                    });
-                }
-                loadPlayers();
-            });
-        </script>
-        <% function phaseLabel(phase) { if (!phase) return '-' ; var baseHue=40; if (phase==='F' )
-            return '<span class="badge" style="background:hsl(' + baseHue + ',80%,60%)">Final</span>' ; if (phase==='A'
-            ) return '<span class="badge" style="background:hsl(200,80%,60%)">Semifinal derecha</span>' ; if
-            (phase==='B' ) return '<span class="badge" style="background:hsl(20,80%,60%)">Semifinal izquierda</span>' ;
-            var match=phase.match(/^([AB])-([0-9]+)(?:-([0-9]+))?(?:-([0-9]+))?$/); if (match) { var lado=match[1]; var
-            n1=match[2], n2=match[3], n3=match[4]; var depth=1 + (n2 ? 1 : 0) + (n3 ? 1 : 0); var hue=lado==='A' ? 200 :
-            20; hue +=(n1 ? parseInt(n1)*30 : 0) + (n2 ? parseInt(n2)*15 : 0) + (n3 ? parseInt(n3)*7 : 0); var label=''
-            ; if (depth===1) label='Cuartos ' + (lado==='A' ? 'derecha' : 'izquierda' ) + ' ' + n1; else if (depth===2)
-            label='Octavos ' + (lado==='A' ? 'derecha' : 'izquierda' ) + ' ' + n1 + '-' + n2; else if (depth===3)
-            label='Dieciseisavos ' + (lado==='A' ? 'derecha' : 'izquierda' ) + ' ' + n1 + '-' + n2 + '-' + n3; else
-            label=phase; return '<span class="badge" style="background:hsl(' + hue + ',80%,60%)">' + label + '</span>' ;
-            } return '<span class="badge bg-secondary">' + phase + '</span>' ; } %>
+        <script src="/js/manage-tournament.js"></script>
 </body>
 
 </html>

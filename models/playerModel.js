@@ -1,56 +1,36 @@
-const { getDb } = require('../db/database');
+const { dbRun, dbGet, dbAll } = require('../db/dbHelpers');
 
 const playerModel = {
-    createPlayer: (name, email, password, callback) => {
-        const db = getDb();
-        db.run('INSERT INTO Players (name, email, password) VALUES (?, ?, ?)', 
-            [name, email, password], 
-            function(err) {
-                callback(err, { id: this.lastID, name, email });
-            }
-        );
+    async createPlayer(name, email, password) {
+        const sql = 'INSERT INTO Players (name, email, password) VALUES (?, ?, ?)';
+        return dbRun(sql, [name, email, password]);
     },
 
-    getPlayerById: (id, callback) => {
-        const db = getDb();
-        db.get('SELECT * FROM Players WHERE id = ?', [id], (err, row) => {
-            callback(err, row);
-        });
+    async getPlayerById(id) {
+        return dbGet('SELECT * FROM Players WHERE id = ?', [id]);
     },
 
-    getPlayers: (callback) => {
-        const db = getDb();
-        db.all('SELECT * FROM Players', [], (err, rows) => {
-            callback(err, rows);
-        });
+    async getPlayers() {
+        return dbAll('SELECT * FROM Players');
     },
 
-    getPlayersNotInTournament: (tournamentId, callback) => {
-        const db = getDb();
+    async getPlayersNotInTournament(tournamentId) {
         const sql = `
             SELECT p.*
             FROM players p
             LEFT JOIN tournament_players tp ON p.id = tp.player_id AND tp.tournament_id = ?
             WHERE tp.player_id IS NULL
         `;
-        db.all(sql, [tournamentId], callback);
+        return dbAll(sql, [tournamentId]);
     },
 
-    updatePlayer: (id, name, callback) => {
-        const db = getDb();
-        db.run('UPDATE Players SET name = ? WHERE id = ?', 
-            [name, id], 
-            function(err) {
-                callback(err, { id, name });
-            }
-        );
+    async updatePlayer(id, name) {
+        const sql = 'UPDATE Players SET name = ? WHERE id = ?';
+        return dbRun(sql, [name, id]);
     },
 
-    deletePlayer: (id, callback) => {
-        const db = getDb();
-        db.run('DELETE FROM Players WHERE id = ?', [id], function(err) {
-            callback(err, { changes: this.changes });
-        });
+    async deletePlayer(id) {
+        return dbRun('DELETE FROM Players WHERE id = ?', [id]);
     }
 };
 

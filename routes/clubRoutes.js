@@ -1,58 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const util = require('util');
 const bcrypt = require('bcryptjs');
 
 const { isAuthenticated, isClubAdmin } = require('../middlewares/authMiddleware');
+const { presentTournament } = require('../presenters/tournamentPresenter');
 const playerModel = require('../models/playerModel');
 const tournamentModel = require('../models/tournamentModel');
 const clubModel = require('../models/clubModel');
 const courtModel = require('../models/courtModel');
+const matchModel = require('../models/matchModel');
+const { dbRun, dbGet, dbAll } = require('../db/dbHelpers');
+const { calculateWinner } = require('../utils/scoring');
+const { getBracketNavigation, getOppositeTeamSlot } = require('../utils/bracket');
 
-// Promisify all the model functions we'll be using
-const getClubByIdAsync = util.promisify(clubModel.getClubById);
-const getTournamentsByClubIdAsync = util.promisify(tournamentModel.getTournamentsByClubId);
-const getPlayersAsync = util.promisify(playerModel.getPlayers);
-const createPlayerAsync = util.promisify(playerModel.createPlayer);
-const getPlayerByIdAsync = util.promisify(playerModel.getPlayerById);
-const updatePlayerAsync = util.promisify(playerModel.updatePlayer);
-const getCourtsByClubAsync = util.promisify(courtModel.getCourtsByClub);
-const createCourtAsync = util.promisify(courtModel.createCourt);
-const updateCourtAsync = util.promisify(courtModel.updateCourt);
-const deleteCourtAsync = util.promisify(courtModel.deleteCourt);
-const createTournamentAsync = util.promisify(tournamentModel.createTournament);
-const hashAsync = util.promisify(bcrypt.hash);
-const getTournamentByIdAsync = util.promisify(tournamentModel.getTournamentById);
-const addPlayerToTournamentAsync = util.promisify(tournamentModel.addPlayerToTournament);
-const addPlayerGroupToTournamentAsync = util.promisify(tournamentModel.addPlayerGroupToTournament);
-const getPlayersByTournamentAsync = util.promisify(tournamentModel.getPlayersByTournament);
-const removePlayerFromTournamentAsync = util.promisify(tournamentModel.removePlayerFromTournament);
-const removePlayerGroupFromTournamentAsync = util.promisify(tournamentModel.removePlayerGroupFromTournament);
-const getPlayersNotInTournamentAsync = util.promisify(playerModel.getPlayersNotInTournament);
-const updateTournamentAsync = util.promisify(tournamentModel.updateTournament);
-const deleteTournamentAsync = util.promisify(tournamentModel.deleteTournament);
-const associateCourtsWithTournament = tournamentModel.associateCourtsWithTournament;
-const getCourtsByTournamentAsync = util.promisify(courtModel.getCourtsByTournament);
-const initializeEliminationTournament = tournamentModel.initializeEliminationTournament;
-const advanceWinner = tournamentModel.advanceWinner;
-const getMatchByIdAsync = util.promisify(tournamentModel.getMatchById);
-const getMatchesWithPlayersByTournament = tournamentModel.getMatchesWithPlayersByTournament;
 
 // Club Admin Dashboard
-router.get('/dashboard', isAuthenticated, isClubAdmin, async (req, res) => {
+router.get('/dashboard', isAuthenticated, async (req, res) => {
     try {
         const clubId = req.session.clubId;
         if (!clubId) {
             return res.status(400).send('Club ID not found in session.');
         }
 
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
 
-        const tournaments = await getTournamentsByClubIdAsync(clubId);
-        const players = await getPlayersAsync();
+        const tournaments = await tournamentModel.getTournamentsByClubId(clubId);
+        const players = await playerModel.getPlayers();
 
         res.render('club/dashboard', {
             user: req.user,
@@ -73,7 +49,7 @@ router.get('/players/create', isAuthenticated, isClubAdmin, async (req, res) => 
         if (!clubId) {
             return res.status(400).send('Club ID not found in session.');
         }
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
@@ -88,8 +64,8 @@ router.get('/players/create', isAuthenticated, isClubAdmin, async (req, res) => 
 router.post('/players/create', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const hashedPassword = await hashAsync(password, 10);
-        await createPlayerAsync(name, email, hashedPassword);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await playerModel.createPlayer(name, email, hashedPassword);
         res.redirect('/club/players');
     } catch (err) {
         console.error('Error creating player:', err.message);
@@ -104,11 +80,11 @@ router.get('/players', isAuthenticated, isClubAdmin, async (req, res) => {
         if (!clubId) {
             return res.status(400).send('Club ID not found in session.');
         }
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
-        const players = await getPlayersAsync();
+        const players = await playerModel.getPlayers();
         res.render('club/players', { title: 'Jugadores del Club', players, club });
     } catch (err) {
         console.error('Error fetching players:', err.message);
@@ -125,17 +101,17 @@ router.get('/players/add-to-tournament/:id', async (req, res) => {
             return res.status(400).send('Club ID not found in session.');
         }
 
-        const player = await getPlayerByIdAsync(playerId);
+        const player = await playerModel.getPlayerById(playerId);
         if (!player) {
             return res.status(404).send('Player not found.');
         }
 
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
 
-        const tournaments = await getTournamentsByClubIdAsync(clubId);
+        const tournaments = await tournamentModel.getTournamentsByClubId(clubId);
         res.render('club/add_player_to_tournament', {
             title: 'Añadir Jugador a Torneo',
             player,
@@ -156,11 +132,11 @@ router.get('/players/edit/:id', isAuthenticated, isClubAdmin, async (req, res) =
         if (!clubId) {
             return res.status(400).send('Club ID not found in session.');
         }
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
-        const player = await getPlayerByIdAsync(playerId);
+        const player = await playerModel.getPlayerById(playerId);
         if (!player) {
             return res.status(404).send('Player not found.');
         }
@@ -176,7 +152,7 @@ router.post('/players/edit/:id', async (req, res) => {
     try {
         const playerId = req.params.id;
         const { name, email } = req.body;
-        await updatePlayerAsync(playerId, name);
+        await playerModel.updatePlayer(playerId, name);
         console.log(`Player ${playerId} updated.`);
         res.redirect('/club/players');
     } catch (err) {
@@ -193,7 +169,7 @@ router.post('/courts/create', isAuthenticated, isClubAdmin, async (req, res) => 
         if (!clubId) {
             return res.status(400).send('Club ID not found in session.');
         }
-        const result = await createCourtAsync(clubId, name);
+        const result = await courtModel.createCourt(clubId, name);
         console.log('Court created:', result.id);
         res.status(201).json(result);
     } catch (err) {
@@ -209,11 +185,11 @@ router.get('/courts', isAuthenticated, isClubAdmin, async (req, res) => {
         if (!clubId) {
             return res.status(400).send('Club ID not found in session.');
         }
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
-        const courts = await getCourtsByClubAsync(clubId);
+        const courts = await courtModel.getCourtsByClub(clubId);
         res.render('club/courts', { title: 'Pistas del Club', courts, club });
     } catch (err) {
         console.error('Error fetching courts:', err.message);
@@ -226,7 +202,7 @@ router.post('/courts/edit/:id', isAuthenticated, isClubAdmin, async (req, res) =
     try {
         const courtId = req.params.id;
         const { name, status } = req.body;
-        await updateCourtAsync(courtId, name, status);
+        await courtModel.updateCourt(courtId, name, status);
         console.log(`Court ${courtId} updated.`);
         res.status(200).json({ id: courtId, name, status });
     } catch (err) {
@@ -239,7 +215,7 @@ router.post('/courts/edit/:id', isAuthenticated, isClubAdmin, async (req, res) =
 router.post('/courts/delete/:id', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
         const courtId = req.params.id;
-        await deleteCourtAsync(courtId);
+        await courtModel.deleteCourt(courtId);
         console.log(`Court ${courtId} deleted.`);
         res.status(200).json({ success: true });
     } catch (err) {
@@ -255,16 +231,17 @@ router.get('/tournaments/create', isAuthenticated, isClubAdmin, async (req, res)
         if (!clubId) {
             return res.status(400).send('Club ID not found in session.');
         }
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
-        const courts = await getCourtsByClubAsync(clubId);
+        const courts = await courtModel.getCourtsByClub(clubId);
         res.render('club/create_tournament', {
             title: 'Crear Torneo',
             club: club,
             user: req.user,
-            courts: courts
+            courts: courts,
+            tournament: {}
         });
     } catch (err) {
         console.error('Error showing create tournament form:', err.message);
@@ -274,30 +251,31 @@ router.get('/tournaments/create', isAuthenticated, isClubAdmin, async (req, res)
 
 // Handle tournament creation
 router.post('/tournaments/create', isAuthenticated, isClubAdmin, async (req, res) => {
-    const { name, description, type, startDate, endDate, courtIds } = req.body;
-    const clubId = req.session.clubId;
-
-    if (!clubId) {
-        return res.status(400).send('Club ID not found in session.');
-    }
-
-    const tournamentData = {
-        club_id: clubId,
-        name,
-        description,
-        type,
-        start_date: startDate,
-        end_date: endDate
-    };
 
     try {
-        const result = await createTournamentAsync(tournamentData);
+        const { name, description, type, startDate, startTime, endDate, endTime, courtIds, setting } = req.body;
+        const clubId = req.session.clubId;
+
+        if (!clubId) {
+            return res.status(400).send('Club ID not found in session.');
+        }
+
+        const tournamentData = {
+            club_id: clubId,
+            name,
+            description,
+            type,
+            start_date: `${startDate}T${startTime}`,
+            end_date: `${endDate}T${endTime}`,
+            setting
+        };
+        const result = await tournamentModel.createTournament(tournamentData);
         const tournamentId = result.id;
 
         if (courtIds && courtIds.length > 0) {
             // Ensure courtIds is an array, even if only one court is selected
             const selectedCourtIds = Array.isArray(courtIds) ? courtIds : [courtIds];
-            await associateCourtsWithTournament(tournamentId, selectedCourtIds);
+            await tournamentModel.associateCourtsWithTournament(tournamentId, selectedCourtIds);
         }
 
         res.redirect('/club/dashboard');
@@ -316,10 +294,10 @@ router.get('/tournaments/:id/manage', isAuthenticated, isClubAdmin, async (req, 
 
         // Fetch all data concurrently
         const [tournament, registeredPlayers, availablePlayers, club] = await Promise.all([
-            getTournamentByIdAsync(tournamentId),
-            getPlayersByTournamentAsync(tournamentId),
-            getPlayersNotInTournamentAsync(tournamentId),
-            getClubByIdAsync(clubId)
+            tournamentModel.getTournamentById(tournamentId),
+            tournamentModel.getPlayersByTournament(tournamentId),
+            playerModel.getPlayersNotInTournament(tournamentId),
+            clubModel.getClubById(clubId)
         ]);
 
         if (!tournament) {
@@ -331,9 +309,10 @@ router.get('/tournaments/:id/manage', isAuthenticated, isClubAdmin, async (req, 
         }
 
         // Fetch courts associated with this tournament
-        const courts = await getCourtsByTournamentAsync(tournamentId);
+        const courts = await courtModel.getCourtsByTournament(tournamentId);
         // Fetch matches with players/teams
         const matches = await tournamentModel.getMatchesWithPlayersByTournament(tournamentId);
+        const viewModel = presentTournament(tournament, matches, registeredPlayers, courts, req.t);
         res.render('club/manage_tournament', {
             tournament,
             registeredPlayers,
@@ -341,6 +320,7 @@ router.get('/tournaments/:id/manage', isAuthenticated, isClubAdmin, async (req, 
             club,
             user: req.user,
             courts,
+            viewModel,
             matches
         });
     } catch (err) {
@@ -358,7 +338,7 @@ router.post('/tournaments/:id/add_player', isAuthenticated, isClubAdmin, async (
         if (!playerId) {
             return res.status(400).send('Player ID is required.');
         }
-        await addPlayerToTournamentAsync(tournamentId, playerId);
+        await tournamentModel.addPlayerToTournament(tournamentId, playerId);
         // Si la petición es AJAX, responde con JSON
         if (req.headers['content-type'] === 'application/json') {
             return res.json({ success: true });
@@ -381,7 +361,7 @@ router.post('/tournaments/:id/add_group', isAuthenticated, isClubAdmin, async (r
             return res.status(400).json({ success: false, message: 'Se requieren exactamente 2 jugadores.' });
         }
         const teamId = `${playerIds[0]}-${playerIds[1]}`;
-        await addPlayerGroupToTournamentAsync(tournamentId, playerIds, teamId);
+        await tournamentModel.addPlayerGroupToTournament(tournamentId, playerIds, teamId);
         return res.json({ success: true });
     } catch (err) {
         return res.status(500).json({ success: false, message: 'Error al crear el grupo.' });
@@ -392,7 +372,7 @@ router.post('/tournaments/:id/add_group', isAuthenticated, isClubAdmin, async (r
 router.post('/tournaments/:tournament_id/remove_player/:player_id', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
         const { tournament_id, player_id } = req.params;
-        await removePlayerFromTournamentAsync(tournament_id, player_id);
+        await tournamentModel.removePlayerFromTournament(tournament_id, player_id);
         res.redirect(`/club/tournaments/${tournament_id}/manage`);
     } catch (err) {
         console.error('Error removing player from tournament:', err.message);
@@ -404,7 +384,7 @@ router.post('/tournaments/:tournament_id/remove_player/:player_id', isAuthentica
 router.post('/tournaments/:tournament_id/ungroup/:team_id', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
         const { tournament_id, team_id } = req.params;
-        await removePlayerGroupFromTournamentAsync(tournament_id, team_id);
+        await tournamentModel.removePlayerGroupFromTournament(tournament_id, team_id);
         res.redirect(`/club/tournaments/${tournament_id}/manage`);
     } catch (err) {
         console.error('Error ungrouping players from tournament:', err.message);
@@ -418,9 +398,11 @@ router.get('/tournaments/:id/edit', isAuthenticated, isClubAdmin, async (req, re
         const tournamentId = req.params.id;
         const clubId = req.session.clubId;
 
-        const [tournament, club] = await Promise.all([
-            getTournamentByIdAsync(tournamentId),
-            getClubByIdAsync(clubId)
+        const [tournament, club, courts, associatedCourts] = await Promise.all([
+            tournamentModel.getTournamentById(tournamentId),
+            clubModel.getClubById(clubId),
+            courtModel.getCourtsByClub(clubId),
+            courtModel.getCourtsByTournament(tournamentId)
         ]);
 
         if (!tournament) {
@@ -431,10 +413,18 @@ router.get('/tournaments/:id/edit', isAuthenticated, isClubAdmin, async (req, re
             return res.status(403).send('Forbidden: You do not have access to this tournament.');
         }
 
+        // Create a Set of associated court IDs for easy lookup in the template
+        const associatedCourtIds = new Set(associatedCourts.map(c => c.id));
+
+        const startDate = new Date(tournament.start_date);
+        const endDate = new Date(tournament.end_date);
+
         res.render('club/edit_tournament', {
             tournament,
             club,
-            user: req.user
+            user: req.user,
+            courts,
+            associatedCourtIds
         });
     } catch (err) {
         console.error('Error showing edit tournament form:', err.message);
@@ -446,9 +436,23 @@ router.get('/tournaments/:id/edit', isAuthenticated, isClubAdmin, async (req, re
 router.post('/tournaments/:id/edit', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
         const tournamentId = req.params.id;
-        const { name, description, type, startDate, endDate } = req.body;
+        const { name, description, type, startDate, startTime, endDate, endTime, courtIds, setting } = req.body;
 
-        await updateTournamentAsync(tournamentId, name, description, type, startDate, endDate);
+        const tournamentData = {
+            name,
+            description,
+            type,
+            start_date: `${startDate}T${startTime}`,
+            end_date: `${endDate}T${endTime}`,
+            setting
+        };
+
+        await tournamentModel.updateTournament(tournamentId, tournamentData);
+
+        if (courtIds) {
+            const selectedCourtIds = Array.isArray(courtIds) ? courtIds : [courtIds];
+            await tournamentModel.associateCourtsWithTournament(tournamentId, selectedCourtIds);
+        }
         
         res.redirect(`/club/tournaments/${tournamentId}/manage`);
     } catch (err) {
@@ -462,12 +466,12 @@ router.post('/tournaments/:id/delete', isAuthenticated, isClubAdmin, async (req,
     try {
         const tournamentId = req.params.id;
         
-        const tournament = await getTournamentByIdAsync(tournamentId);
+        const tournament = await tournamentModel.getTournamentById(tournamentId);
         if (!tournament || tournament.club_id !== req.session.clubId) {
             return res.status(403).send('Forbidden or tournament not found.');
         }
 
-        await deleteTournamentAsync(tournamentId);
+        await tournamentModel.deleteTournament(tournamentId);
         res.redirect('/club/dashboard');
     } catch (err) {
         console.error('Error deleting tournament:', err.message);
@@ -483,7 +487,7 @@ router.get('/onboarding-guide', isAuthenticated, isClubAdmin, async (req, res) =
             return res.status(400).send('Club ID not found in session.');
         }
 
-        const club = await getClubByIdAsync(clubId);
+        const club = await clubModel.getClubById(clubId);
         if (!club) {
             return res.status(404).send('Club not found.');
         }
@@ -502,16 +506,19 @@ router.get('/onboarding-guide', isAuthenticated, isClubAdmin, async (req, res) =
 router.post('/tournaments/:id/start_match', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
         const tournamentId = req.params.id;
-        const registeredPlayers = await getPlayersByTournamentAsync(tournamentId);
+        const registeredPlayers = await tournamentModel.getPlayersByTournament(tournamentId);
         if (!registeredPlayers || registeredPlayers.length < 4 || registeredPlayers.length % 4 !== 0) {
             // Renderiza la vista con un banner de aviso
             const clubId = req.session.clubId;
             const [tournament, availablePlayers, club, courts] = await Promise.all([
-                getTournamentByIdAsync(tournamentId),
-                getPlayersNotInTournamentAsync(tournamentId),
-                getClubByIdAsync(clubId),
-                getCourtsByTournamentAsync(tournamentId)
+                tournamentModel.getTournamentById(tournamentId),
+                playerModel.getPlayersNotInTournament(tournamentId),
+                clubModel.getClubById(clubId),
+                courtModel.getCourtsByTournament(tournamentId)
             ]);
+            const matches = await tournamentModel.getMatchesWithPlayersByTournament(tournamentId);
+            
+            const viewModel = presentTournament(tournament, matches, registeredPlayers, courts, req.t);
             return res.render('club/manage_tournament', {
                 tournament,
                 registeredPlayers,
@@ -519,6 +526,8 @@ router.post('/tournaments/:id/start_match', isAuthenticated, isClubAdmin, async 
                 club,
                 user: req.user,
                 courts,
+                matches,
+                viewModel,
                 banner: 'No se puede iniciar el torneo: la cantidad de jugadores debe ser múltiplo de 4 y al menos 4.'
             });
         }
@@ -537,7 +546,7 @@ router.get('/tournaments/:id/search_players', isAuthenticated, isClubAdmin, asyn
         const tournamentId = req.params.id;
         const q = req.query.q ? req.query.q.toLowerCase() : '';
         const limit = parseInt(req.query.limit) || 0;
-        let players = await getPlayersNotInTournamentAsync(tournamentId);
+        let players = await playerModel.getPlayersNotInTournament(tournamentId);
         if (q) {
             players = players.filter(p => p.name.toLowerCase().includes(q));
         }
@@ -555,7 +564,7 @@ router.post('/tournaments/:id/start', isAuthenticated, isClubAdmin, async (req, 
     const tournamentId = req.params.id;
     try {
         // The new model function handles all logic, including validations
-        await initializeEliminationTournament(tournamentId);
+        await tournamentModel.initializeEliminationTournament(tournamentId);
 
         res.redirect(`/club/tournaments/${tournamentId}/manage`);
 
@@ -566,14 +575,15 @@ router.post('/tournaments/:id/start', isAuthenticated, isClubAdmin, async (req, 
         // Re-fetch data needed to render the management page with an error message
         const clubId = req.session.clubId;
         const [tournament, registeredPlayers, availablePlayers, club, courts, matches] = await Promise.all([
-            getTournamentByIdAsync(tournamentId),
-            getPlayersByTournamentAsync(tournamentId),
-            getPlayersNotInTournamentAsync(tournamentId),
-            getClubByIdAsync(clubId),
-            getCourtsByTournamentAsync(tournamentId),
+            tournamentModel.getTournamentById(tournamentId),
+            tournamentModel.getPlayersByTournament(tournamentId),
+            playerModel.getPlayersNotInTournament(tournamentId),
+            clubModel.getClubById(clubId),
+            courtModel.getCourtsByTournament(tournamentId),
             tournamentModel.getMatchesWithPlayersByTournament(tournamentId)
         ]);
 
+        const viewModel = presentTournament(tournament, matches, registeredPlayers, courts, req.t);
         res.render('club/manage_tournament', {
             tournament,
             registeredPlayers,
@@ -582,60 +592,71 @@ router.post('/tournaments/:id/start', isAuthenticated, isClubAdmin, async (req, 
             user: req.user,
             courts,
             matches,
+            viewModel,
             mensaje: err.message, // Pass the specific error message to the view
             mensajeTipo: 'danger'
         });
     }
 });
 
-// Ruta para registrar el resultado de un partido
+// Ruta para registrar el resultado de un partido (AJAX)
 router.post('/matches/register_score', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
-        const { match_id, set1_teamA, set1_teamB, set2_teamA, set2_teamB, set3_teamA, set3_teamB } = req.body;
-        // Construir el marcador en formato "6-3, 4-6, 7-5" (solo sets con datos)
-        let scoreArr = [];
-        let setsA = 0, setsB = 0;
-        function addSet(a, b) {
-            if (a !== '' && b !== '') {
-                scoreArr.push(`${a}-${b}`);
-                a = parseInt(a, 10); b = parseInt(b, 10);
-                if (!isNaN(a) && !isNaN(b)) {
-                    if (a > b) setsA++;
-                    else if (b > a) setsB++;
+        const { match_id, scoreData } = req.body;
+
+        if (!match_id || !scoreData) {
+            return res.status(400).json({ success: false, message: 'Faltan datos para registrar el resultado.' });
+        }
+
+        const sets = [
+            { a: scoreData.score_teamA_set1, b: scoreData.score_teamB_set1 },
+            { a: scoreData.score_teamA_set2, b: scoreData.score_teamB_set2 },
+            { a: scoreData.score_teamA_set3, b: scoreData.score_teamB_set3 },
+        ];
+
+        const { winner: team_winner } = calculateWinner(sets);
+
+        if (!team_winner) {
+            return res.status(400).json({ success: false, message: 'El resultado no es válido para determinar un ganador.' });
+        }
+
+        // The winner advancement logic from the old handler
+        const match = await dbGet('SELECT * FROM matches WHERE id = ?', [match_id]);
+        if (!match) {
+            return res.status(404).json({ success: false, message: 'Partido no encontrado.' });
+        }
+        
+        const { parent: next_parent } = getBracketNavigation(match.phase);
+        
+        if(match.team_winner && next_parent) { // If there was a previous winner, we need to undo their advancement
+            const next_match = await dbGet('SELECT * FROM matches WHERE tournament_id = ? AND phase = ?', [match.tournament_id, next_parent]);
+            if (next_match) {
+                await dbRun('DELETE FROM match_players WHERE match_id = ? AND winner_from = ?', [next_match.id, match.id]);
+            }
+        }
+
+        // Save the new score and winner using the model function
+        await matchModel.updateMatch(match_id, scoreData, team_winner);
+
+        // Get the winning players
+        const winningPlayers = await dbAll('SELECT * FROM match_players WHERE match_id = ? AND team = ? LIMIT 2', [match_id, team_winner]);
+
+        // Advance the new winner to the next round
+        if (next_parent && winningPlayers.length > 0) {
+            const next_match = await dbGet('SELECT * FROM matches WHERE tournament_id = ? AND phase = ?', [match.tournament_id, next_parent]);
+            if (next_match) {
+                const rivals = await dbGet('SELECT * FROM match_players WHERE match_id = ?', [next_match.id]);
+                for (const player of winningPlayers) {
+                    await dbRun('INSERT INTO match_players (match_id, player_id, team, winner_from) VALUES (?, ?, ?, ?)', [next_match.id, player.player_id, getOppositeTeamSlot(rivals?.team), match.id]);
                 }
             }
-        }
-        addSet(set1_teamA, set1_teamB);
-        addSet(set2_teamA, set2_teamB);
-        addSet(set3_teamA, set3_teamB);
-        const score = scoreArr.join(', ');
-        // Calcular equipo ganador
-        let team_winner = null;
-        if (setsA > setsB) team_winner = 'A';
-        else if (setsB > setsA) team_winner = 'B';
-        else team_winner = 'draw';
-        // Guardar el marcador y el ganador en la base de datos
-        const db = require('../db/database').getDb();
-        await new Promise((resolve, reject) => {
-            db.run('UPDATE matches SET score = ?, team_winner = ? WHERE id = ?', [score, team_winner, match_id], function(err) {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
+        } 
+        
+        res.json({ success: true, message: 'Resultado guardado correctamente.' });
 
-        // Avanzar al ganador a la siguiente ronda
-        if (team_winner !== 'draw') {
-            // Need to get the match details to pass tournament_id
-            const match = await getMatchByIdAsync(match_id);
-            if (match) {
-                await advanceWinner(match.tournament_id, match_id, team_winner);
-            }
-        }
-
-        // Redirigir de vuelta a la gestión del torneo
-        res.redirect('back');
     } catch (err) {
-        res.status(500).send('Error al registrar el resultado: ' + err.message);
+        console.error('Error al registrar el resultado:', err);
+        res.status(500).json({ success: false, message: 'Error al registrar el resultado: ' + err.message });
     }
 });
 
@@ -660,24 +681,24 @@ router.post('/tournaments/:id/next_round', isAuthenticated, isClubAdmin, async (
 });
 
 // Ruta para avanzar al ganador de un partido a la siguiente ronda
-router.post('/tournaments/:tournamentId/matches/:matchId/advance_winner', isAuthenticated, isClubAdmin, async (req, res) => {
-    try {
-        const { tournamentId, matchId } = req.params;
-        const { winnerTeamId } = req.body; // Assuming winnerTeamId is sent in the request body
+// router.post('/tournaments/:tournamentId/matches/:matchId/advance_winner', isAuthenticated, isClubAdmin, async (req, res) => {
+//     try {
+//         const { tournamentId, matchId } = req.params;
+//         const { winnerTeamId } = req.body; // Assuming winnerTeamId is sent in the request body
 
-        await advanceWinner(tournamentId, matchId, winnerTeamId);
-        res.json({ success: true, message: 'Winner advanced successfully.' });
-    } catch (err) {
-        console.error('Error advancing winner:', err.message);
-        res.status(500).json({ success: false, message: 'Error advancing winner.', error: err.message });
-    }
-});
+//         await tournamentModel.advanceWinner(tournamentId, matchId, winnerTeamId);
+//         res.json({ success: true, message: 'Winner advanced successfully.' });
+//     } catch (err) {
+//         console.error('Error advancing winner:', err.message);
+//         res.status(500).json({ success: false, message: 'Error advancing winner.', error: err.message });
+//     }
+// });
 
 // Ruta para mostrar el formulario de registro de resultados de un partido
 router.get('/matches/:id/record_result', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
         const matchId = req.params.id;
-        const match = await getMatchByIdAsync(matchId);
+        const match = await tournamentModel.getMatchById(matchId);
 
         if (!match) {
             return res.status(404).send('Match not found.');

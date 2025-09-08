@@ -5,15 +5,15 @@ const i18next = require('i18next');
 const i18nextMiddleware = require('i18next-http-middleware');
 const Backend = require('i18next-fs-backend');
 const { initDatabase } = require('./db/database');
+const { seedDatabase } = require('./db/seed.js');
 
-
-// Importar rutas (aunque todavía no las usemos)
+// Importar rutas
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/authRoutes');
 const adminRouter = require('./routes/adminRoutes')
 const tournamentRouter = require('./routes/tournamentRoutes');
 const apiRouter = require('./routes/apiRoutes');
-const clubRouter = require('./routes/clubRoutes'); // Added this line
+const clubRouter = require('./routes/clubRoutes');
 
 i18next
     .use(Backend)
@@ -24,7 +24,7 @@ i18next
         },
         fallbackLng: 'en',
         preload: ['en', 'es'],
-        saveMissing: true, // Ayuda a encontrar claves que falten durante el desarrollo
+        saveMissing: true,
         detection: {
             order: ['cookie', 'header'],
             caches: ['cookie']
@@ -35,7 +35,7 @@ const app = express();
 
 // Configuración de Express
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json()); // Add this line to parse JSON bodies
+app.use(express.json());
 app.use(express.static('public'));
 
 // Middleware de i18next
@@ -63,17 +63,33 @@ app.use((req, res, next) => {
 app.use('/', indexRouter);
 app.use('/', authRouter);
 app.use('/admin', adminRouter);
-app.use('/club', clubRouter); // Added this line
+app.use('/club', clubRouter);
 app.use('/tournaments', tournamentRouter);
 app.use('/api', apiRouter);
 
 // Definir puerto y arrancar servidor
 const PORT = process.env.PORT || 3000;
 
-initDatabase().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Servidor escuchando en http://localhost:${PORT}`);
+console.log('Initializing application...');
+
+initDatabase()
+    .then(({ justCreated }) => {
+        // Si la BD se acaba de crear y no estamos en producción, la poblamos.
+        if (justCreated && process.env.NODE_ENV !== 'production') {
+            console.log('Database was just created, seeding with development data...');
+            // Devolvemos la promesa de seedDatabase para encadenarla
+            return seedDatabase();
+        }
+        // Si no hay que poblar, devolvemos una promesa resuelta para continuar.
+        return Promise.resolve();
+    })
+    .then(() => {
+        // Este bloque se ejecuta DESPUÉS de que initDatabase y el sembrado (si ocurrió) hayan terminado.
+        app.listen(PORT, () => {
+            console.log(`Server listening on http://localhost:${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error('Failed to initialize or seed database:', err);
+        process.exit(1); // Salir del proceso si la inicialización falla
     });
-}).catch(err => {
-    console.error('Failed to initialize database:', err);
-});

@@ -2,106 +2,154 @@
 <html lang="es">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Editar Torneo — PadelFlow</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link rel="stylesheet" href="/assets/css/styles.css" />
-    <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editar Torneo: <%= tournament.name %> — PadelFlow</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
 </head>
 
 <body>
-    <%- include('partials/club_header') %>
+  <%- include('partials/club_header') %>
     <div class="admin-shell">
-        <%- include('partials/club_sidebar', { club: club }) %>
-        <div class="main flex-grow-1">
-            <main class="container-fluid p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="h3 mb-0">Editar Torneo: <%= tournament.name %></h1>
-                    <a href="/club/tournaments/<%= tournament.id %>/manage" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Cancelar</a>
-                </div>
+      <!-- Sidebar -->
+      <%- include('partials/club_sidebar', { club: club }) %>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-pencil-alt me-2"></i>Formulario de Edición</h5>
-                    </div>
-                    <div class="card-body">
-                        <form action="/club/tournaments/<%= tournament.id %>/edit" method="POST">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="name" class="form-label">Nombre del Torneo</label>
-                                    <input type="text" class="form-control" id="name" name="name" value="<%= tournament.name %>" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="type" class="form-label">Tipo de Torneo</label>
-                                    <select class="form-select" id="type" name="type" required>
-                                        <option value="Round Robin" <%= tournament.type === 'Round Robin' ? 'selected' : '' %>>Round Robin</option>
-                                        <option value="Elimination" <%= tournament.type === 'Elimination' ? 'selected' : '' %>>Eliminación</option>
-                                        <option value="League" <%= tournament.type === 'League' ? 'selected' : '' %>>Liga</option>
-                                        <option value="Americana" <%= tournament.type === 'Americana' ? 'selected' : '' %>>Americana</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Descripción</label>
-                                <textarea class="form-control" id="description" name="description" rows="3"><%= tournament.description %></textarea>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="startDate_date" class="form-label">Fecha de Inicio</label>
-                                    <input type="date" class="form-control" id="startDate_date" name="startDate_date" required>
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <label for="startTime" class="form-label">Hora de Inicio</label>
-                                    <input type="time" class="form-control" id="startTime" name="startTime" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="endDate" class="form-label">Fecha de Fin</label>
-                                    <input type="date" class="form-control" id="endDate" name="endDate" value="<%= tournament.end_date ? tournament.end_date.split('T')[0] : '' %>" required>
-                                </div>
-                            </div>
-                            <input type="hidden" id="startDate" name="startDate">
-                            
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Guardar Cambios</button>
-                        </form>
-                    </div>
+        <!-- Main -->
+        <div class="main flex-grow-1">
+          <!-- Content -->
+          <main class="container-fluid p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0">Editar Torneo: <%= tournament.name %>
+              </h1>
+              <div>
+                <a href="/club/tournaments/<%= tournament.id %>/manage" class="btn btn-secondary"><i
+                    class="fas fa-arrow-left me-1"></i> Cancelar</a>
+              </div>
+            </div>
+
+            <form action="/club/tournaments/<%= tournament.id %>/edit" method="POST">
+
+              <!-- Step 1: Tournament Details -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5><i class="fas fa-info-circle me-2"></i>Paso 1: Detalles del Torneo</h5>
                 </div>
-            </main>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="name" class="form-label">Nombre del Torneo</label>
+                      <input type="text" class="form-control" id="name" name="name" value="<%= tournament.name %>"
+                        required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="type" class="form-label">Tipo de Torneo</label>
+                      <select class="form-select" id="type" name="type" required>
+                        <option value="Round Robin" <%=tournament.type==='Round Robin' ? 'selected' : '' %>>Round Robin
+                        </option>
+                        <option value="Elimination" <%=tournament.type==='Elimination' ? 'selected' : '' %>>Eliminación
+                        </option>
+                        <option value="League" <%=tournament.type==='League' ? 'selected' : '' %>>Liga</option>
+                        <option value="Americana" <%=tournament.type==='Americana' ? 'selected' : '' %>>Americana
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="description" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="description" name="description"
+                      rows="3"><%= tournament.description %></textarea>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label for="startDate" class="form-label">Fecha de Inicio</label>
+                      <input type="date" class="form-control" id="startDate" name="startDate"
+                        value="<%= tournament?.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : '' %>"
+                        required>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                      <label for="startTime" class="form-label">Hora de Inicio</label>
+                      <input type="time" class="form-control" id="startTime" name="startTime"
+                        value="<%= tournament?.start_date ? tournament?.start_date?.split('T')[1]?.slice(0, 5) : '' %>"
+                        required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="endDate" class="form-label">Fecha de Fin</label>
+                      <input type="date" class="form-control" id="endDate" name="endDate"
+                        value="<%= tournament?.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : '' %>"
+                        required>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                      <label for="endTime" class="form-label">Hora de Fin</label>
+                      <input type="time" class="form-control" id="endTime" name="endTime"
+                        value="<%= tournament?.end_date ? tournament?.end_date?.split('T')[1]?.slice(0, 5) : '' %>"
+                        required>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Court Configuration -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5><i class="fas fa-layer-group me-2"></i>Paso 2: Configuración de Pistas</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Seleccionar Pistas a Utilizar</label>
+                      <div>
+                        <% if (courts && courts.length> 0) { %>
+                          <% courts.forEach(function(court) { %>
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" name="courtIds[]"
+                                id="court_<%= court.id %>" value="<%= court.id %>" <%=associatedCourtIds.has(court.id)
+                                ? 'checked' : '' %>>
+                              <label class="form-check-label" for="court_<%= court.id %>">
+                                <%= court.name %>
+                              </label>
+                            </div>
+                            <% }); %>
+                              <% } else { %>
+                                <p class="text-muted">No hay pistas disponibles. Por favor, crea algunas primero.</p>
+                                <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: Tournament Preferences -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5><i class="fas fa-cogs me-2"></i>Preferencias del Torneo</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="settings_match_duration" class="form-label">Duración del Partido (minutos)</label>
+                      <input type="number" class="form-control" id="settings_match_duration"
+                        name="setting[match_duration]"
+                        value="<%= tournament.setting && tournament.setting.match_duration ? tournament.setting.match_duration : 90 %>"
+                        required>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="fixed-bottom-bar d-flex justify-content-end p-3 bg-light border-top shadow-sm">
+                <a href="/club/tournaments/<%= tournament.id %>/manage" class="btn btn-secondary me-2">Cancelar</a>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Guardar Cambios</button>
+              </div>
+
+            </form>
+          </main>
         </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('form');
-            const startDate_date = document.getElementById('startDate_date');
-            const startTime = document.getElementById('startTime');
-            const hiddenStartDate = document.getElementById('startDate');
-
-            // Pre-fill inputs from existing tournament data
-            const existingStartDate = new Date('<%= tournament.start_date %>');
-            if (!isNaN(existingStartDate)) {
-                // Format to YYYY-MM-DD for the date input
-                const year = existingStartDate.getFullYear();
-                const month = ('0' + (existingStartDate.getMonth() + 1)).slice(-2);
-                const day = ('0' + existingStartDate.getDate()).slice(-2);
-                startDate_date.value = `${year}-${month}-${day}`;
-
-                // Format to HH:MM for the time input
-                const hours = ('0' + existingStartDate.getHours()).slice(-2);
-                const minutes = ('0' + existingStartDate.getMinutes()).slice(-2);
-                startTime.value = `${hours}:${minutes}`;
-            }
-
-            // Combine date and time for submission
-            form.addEventListener('submit', function(e) {
-                const date = startDate_date.value;
-                const time = startTime.value;
-                if (date && time) {
-                    hiddenStartDate.value = `${date}T${time}`;
-                }
-            });
-        });
-    </script>
 </body>
+
 </html>

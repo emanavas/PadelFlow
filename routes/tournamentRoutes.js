@@ -1,14 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const util = require('util');
 
 const { isAuthenticated, isClubAdmin } = require('../middlewares/authMiddleware');
 const { checkFreemium } = require('../middlewares/freemiumMiddleware');
 const tournamentModel = require('../models/tournamentModel');
-
-// Promisify model functions
-const getTournamentsByClubIdAsync = util.promisify(tournamentModel.getTournamentsByClubId);
-const createTournamentAsync = util.promisify(tournamentModel.createTournament);
 
 // Apply isAuthenticated and isClubAdmin middleware to all routes in this file
 router.use(isAuthenticated);
@@ -17,7 +12,7 @@ router.use(isClubAdmin);
 // GET /dashboard - Render the admin dashboard
 router.get('/dashboard', async (req, res) => {
     try {
-        const tournaments = await getTournamentsByClubIdAsync(req.clubId);
+        const tournaments = await tournamentModel.getTournamentsByClubId(req.clubId);
         res.render('admin/dashboard', { tournaments: tournaments });
     } catch (err) {
         console.error('Error fetching tournaments:', err.message);
@@ -35,7 +30,7 @@ router.post('/tournaments/create', checkFreemium, async (req, res) => {
     try {
         const { name, type, startDate, endDate } = req.body;
         const club_id = req.clubId;
-        const result = await createTournamentAsync(club_id, name, type, startDate, endDate);
+        const result = await tournamentModel.createTournament({ club_id, name, type, start_date: startDate, end_date: endDate });
         console.log('Tournament created:', result.id);
         res.redirect('/dashboard');
     } catch (err) {

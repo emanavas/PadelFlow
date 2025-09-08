@@ -1,0 +1,236 @@
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-sitemap me-2"></i>Bracket del Torneo</h5>
+    </div>
+    <div class="card-body bracket">
+
+        <% roundsA.slice().reverse().forEach((level, roundIndex)=> {
+            %>
+            <div class="round">
+                <% bracketData.roundsA[level].forEach((match, matchIndex)=> {
+                    %>
+                    <div class="match">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <%- match?.phaseLabel || roundIndex + 1 %>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="text-muted text-center border-bottom mb-1 pb-1">
+                                    <small><i class="fas fa-clock me-1"></i>
+                                        <%= match?.startTime || 'N/A' %>
+                                    </small>
+                                    <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i>
+                                        <%= match?.courtName || 'N/A' %>
+                                    </small>
+                                </div>
+                                <div class="d-flex justify-content-around border-bottom mb-1 pb-1">
+                                    <small>
+                                        Team
+                                    </small>
+                                    <small class="ms-2">
+                                        Sets
+                                    </small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="truncate-text">
+                                        <strong>
+                                            A
+                                        </strong>
+                                        <%= match.players.teamA.map(p=> p.name).join('/') || 'Equipo A' %>
+                                    </small>
+                                    <div class="d-flex mx-1">
+                                        <span class="badge bg-light text-dark ml-1">
+                                            <%= match?.score_teamA_set1 || '-' %>
+                                        </span>
+                                        <span class="badge bg-light text-dark ml-1">
+                                            <%= match?.score_teamA_set2 || '-' %>
+                                        </span>
+                                        <span class="badge bg-light text-dark ml-1">
+                                            <%= match?.score_teamA_set3 || '-' %>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="truncate-text">
+                                        <strong>
+                                            B
+                                        </strong>
+                                        <%= match.players.teamB.map(p=> p.name).join('/') || 'Equipo B' %>
+                                    </small>
+                                    <div class="d-flex mx-1">
+                                        <span class="badge bg-light text-dark ml-1">
+                                            <%= match?.score_teamB_set1 || '-' %>
+                                        </span>
+                                        <span class="badge bg-light text-dark ml-1">
+                                            <%= match?.score_teamB_set2 || '-' %>
+                                        </span>
+                                        <span class="badge bg-light text-dark ml-1">
+                                            <%= match?.score_teamB_set3 || '-' %>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer text-center p-1">
+                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                    data-bs-target="#scoreModal" data-match-id="<%= match.id %>">Registrar</button>
+                            </div>
+                        </div>
+                        <% if (roundIndex < roundsA.length - 1) { %>
+                            <div class="match-connector"></div>
+                            <% } %>
+                                <% if (matchIndex % 2===0 && matchIndex < bracketData.roundsA[level].length - 1) { %>
+                                    <div class="round-connector-right" style="height: calc(100% + 30px); top: 50%;">
+                                    </div>
+                                    <% } %>
+                    </div>
+                    <% }); %>
+            </div>
+            <% }); %>
+
+                <div class="round">
+
+                    <% bracketData.final.forEach((match, matchIndex)=> {
+                        %>
+                        <div class="match">
+                            <div class="card">
+                                <div class="card-header text-center">
+                                    <h3 class="text-center">Final</h3>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="text-muted text-center border-bottom mb-1 pb-1">
+                                        <small><i class="fas fa-clock me-1"></i>
+                                            <%= match.startTime || 'N/A' %>
+                                        </small>
+                                        <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i>
+                                            <%= match.courtName || 'N/A' %>
+                                        </small>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small class="truncate-text">
+                                            <strong>
+                                                A
+                                            </strong>
+                                            <%= match.players.teamA.map(p=> p.name).join('/') || 'Equipo A' %>
+                                        </small>
+                                        <div class="d-flex mx-1">
+                                            <span class="badge bg-light text-dark ml-1">
+                                                <%= match?.score_teamA_set1 || '-' %>
+                                            </span>
+                                            <span class="badge bg-light text-dark ml-1">
+                                                <%= match?.score_teamA_set2 || '-' %>
+                                            </span>
+                                            <span class="badge bg-light text-dark ml-1">
+                                                <%= match?.score_teamA_set3 || '-' %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>
+                                            B
+                                        </strong>
+                                        <small>
+                                            <%= match.players.teamB.map(p=> p.name).join('/') || 'Equipo B' %>
+                                        </small>
+                                        <div class="d-flex mx-1">
+                                            <span class="badge bg-light text-dark ml-1">
+                                                <%= match?.score_teamB_set1 || '-' %>
+                                            </span>
+                                            <span class="badge bg-light text-dark ml-1">
+                                                <%= match?.score_teamB_set2 || '-' %>
+                                            </span>
+                                            <span class="badge bg-light text-dark ml-1">
+                                                <%= match?.score_teamB_set3 || '-' %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-center p-1">
+                                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                        data-bs-target="#scoreModal" data-match-id="<%= match.id %>">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                </div>
+
+                <% if (roundsB && bracketData) { %>
+                    <% roundsB.forEach((level, roundIndex)=> {
+                        %>
+                        <div class="round">
+                            <% bracketData.roundsB[level].forEach((match, matchIndex)=> {
+                                %>
+                                <div class="match">
+                                    <div class="card">
+                                        <div class="card-body p-2">
+                                            <div class="text-muted text-center border-bottom mb-1 pb-1">
+                                                <small><i class="fas fa-clock me-1"></i>
+                                                    <%= match?.startTime || 'N/A' %>
+                                                </small>
+                                                <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i>
+                                                    <%= match?.courtName || 'N/A' %>
+                                                </small>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+
+                                                <small class="truncate-text">
+                                                    <strong>
+                                                        A
+                                                    </strong>
+                                                    <%= match.players.teamA.map(p=> p.name).join('/') || 'Equipo A' %>
+                                                </small>
+                                                <div class="d-flex mx-1">
+                                                    <span class="badge bg-light text-dark ml-1">
+                                                        <%= match?.score_teamA_set1 || '-' %>
+                                                    </span>
+                                                    <span class="badge bg-light text-dark ml-1">
+                                                        <%= match?.score_teamA_set2 || '-' %>
+                                                    </span>
+                                                    <span class="badge bg-light text-dark ml-1">
+                                                        <%= match?.score_teamA_set3 || '-' %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong>
+                                                    B
+                                                </strong>
+                                                <small>
+                                                    <%= match.players.teamB.map(p=> p.name).join('/') || 'Equipo B' %>
+                                                </small>
+                                                <div class="d-flex mx-1">
+                                                    <span class="badge bg-light text-dark ml-1">
+                                                        <%= match?.score_teamB_set1 || '-' %>
+                                                    </span>
+                                                    <span class="badge bg-light text-dark ml-1">
+                                                        <%= match?.score_teamB_set2 || '-' %>
+                                                    </span>
+                                                    <span class="badge bg-light text-dark ml-1">
+                                                        <%= match?.score_teamB_set3 || '-' %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer text-center p-1">
+                                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                                data-bs-target="#scoreModal"
+                                                data-match-id="<%= match.id %>">Registrar</button>
+                                        </div>
+                                    </div>
+                                    <% if (matchIndex % 2===0 && matchIndex < bracketData.roundsB[level].length - 1) {
+                                        %>
+                                        <div class="round-connector-left" style="height: calc(100% + 30px); top: 50%;">
+                                        </div>
+                                        <% } %>
+                                            <% if (roundIndex> 0) { %>
+                                                <div class="match-connector-branch"></div>
+                                                <% } %>
+
+                                </div>
+                                <% }); %>
+                        </div>
+                        <% }); %>
+                            <% } else { %>
+                                <div class="alert alert-info">No hay datos del cuadro para mostrar.</div>
+                                <% } %>
+    </div>
+</div>

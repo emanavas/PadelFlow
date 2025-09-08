@@ -1,22 +1,26 @@
 const userModel = require('../models/userModel');
 
-const isAuthenticated = (req, res, next) => {
+const isAuthenticated = async (req, res, next) => {
     if (req.session.userId) {
-        userModel.findUserById(req.session.userId, (err, user) => {
-            if (err || !user) {
-                console.error('Error finding user for session:', err ? err.message : 'User not found');
+        try {
+            const user = await userModel.findUserById(req.session.userId);
+            if (!user) {
+                console.error('Error finding user for session: User not found');
                 return res.redirect('/login');
             }
             req.user = user;
-            req.clubId = user.club_id; // Attach club_id to request if user is a club admin or player
+            req.clubId = user.club_id; // Attach club_id to request
             next();
-        });
+        } catch (err) {
+            console.error('Error finding user for session:', err.message);
+            return res.redirect('/login');
+        }
     } else {
         res.redirect('/login');
     }
 };
 
-const isClubAdmin = (req, res, next) => {
+const isClubAdmin = async (req, res, next) => {
     // Check if user is a club admin or platform admin
     if (req.user && (req.user.role === 'club_admin' || req.user.role === 'platform_admin')) {
         next();
@@ -25,7 +29,7 @@ const isClubAdmin = (req, res, next) => {
     }
 };
 
-const isPlatformAdmin = (req, res, next) => {
+const isPlatformAdmin = async (req, res, next) => {
     if (req.user && req.user.role === 'platform_admin') {
         next();
     } else {

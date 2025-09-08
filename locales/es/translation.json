@@ -9,5 +9,14 @@
   "noAccount": "¿No tienes cuenta? Regístrate",
   "features": "Características",
   "plans": "Planes",
-  "contact": "Contacto"
+  "contact": "Contacto",
+  "round_final": "Final",
+  "round_semifinal": "Semifinal",
+  "round_quarterfinal": "Cuartos de Final",
+  "round_of_16": "Octavos de Final",
+  "round_of_32": "16avos de Final",
+  "round_of_64": "32avos de Final",
+  "round_of_128": "64avos de Final",
+  "side_right": "derecha",
+  "side_left": "izquierda"
 }

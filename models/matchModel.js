@@ -1,40 +1,32 @@
-const { getDb } = require('../db/database');
+const { dbRun, dbGet, dbAll } = require('../db/dbHelpers');
 
 const matchModel = {
-    // Creates a match record without players. Players are linked via match_players table.
-    createMatch: (tournament_id, phase, court_id, callback) => {
-        const db = getDb();
-        // Removed player_id columns from INSERT statement
-        db.run('INSERT INTO matches (tournament_id, phase, court_id) VALUES (?, ?, ?)',
-            [tournament_id, phase, court_id],
-            function(err) {
-                callback(err, { id: this.lastID });
+    async createMatch(tournament_id, phase, court_id) {
+        const sql = 'INSERT INTO matches (tournament_id, phase, court_id) VALUES (?, ?, ?)';
+        const result = await dbRun(sql, [tournament_id, phase, court_id]);
+        return result.lastID;
+    },
+
+    async addPlayersToMatch(matchId, playersWithTeams) {
+        try {
+            await dbRun('BEGIN TRANSACTION;');
+            for (const player of playersWithTeams) {
+                await dbRun('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)', [matchId, player.id, player.team]);
             }
-        );
+            await dbRun('COMMIT;');
+            return { message: `Added ${playersWithTeams.length} players to match ${matchId}.` };
+        } catch (error) {
+            await dbRun('ROLLBACK;');
+            console.error("Error adding players to match:", error);
+            throw error;
+        }
     },
 
-    // Links players to a specific match in the match_players table
-    addPlayersToMatch: (matchId, playersWithTeams, callback) => {
-        const db = getDb();
-        const stmt = db.prepare('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)');
-        db.serialize(() => {
-            db.run('BEGIN TRANSACTION;');
-            playersWithTeams.forEach(player => {
-                stmt.run(matchId, player.id, player.team);
-            });
-            db.run('COMMIT;', (err) => {
-                stmt.finalize();
-                callback(err, { message: `Added ${playersWithTeams.length} players to match ${matchId}.` });
-            });
-        });
-    },
-
-    getMatchById: (id, callback) => {
-        const db = getDb();
-        // Join with match_players and players to get player details
+    async getMatchById(id) {
         const sql = `
             SELECT
                 m.*,
+                c.name as court_name,
                 GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.name END) AS team_a_players,
                 GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.name END) AS team_b_players,
                 GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.id END) AS team_a_player_ids,
@@ -42,18 +34,18 @@ const matchModel = {
             FROM matches m
             LEFT JOIN match_players mp ON m.id = mp.match_id
             LEFT JOIN players p ON mp.player_id = p.id
+            LEFT JOIN courts c ON m.court_id = c.id
             WHERE m.id = ?
             GROUP BY m.id
         `;
-        db.get(sql, [id], callback);
+        return dbGet(sql, [id]);
     },
 
-    getMatchesByTournamentId: (tournament_id, callback) => {
-        const db = getDb();
-        // Join with match_players and players to get player details for all matches
+    async getMatchesByTournamentId(tournament_id) {
         const sql = `
             SELECT
                 m.*,
+                c.name as court_name,
                 GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.name END) AS team_a_players,
                 GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.name END) AS team_b_players,
                 GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.id END) AS team_a_player_ids,
@@ -61,38 +53,40 @@ const matchModel = {
             FROM matches m
             LEFT JOIN match_players mp ON m.id = mp.match_id
             LEFT JOIN players p ON mp.player_id = p.id
+            LEFT JOIN courts c ON m.court_id = c.id
             WHERE m.tournament_id = ?
             GROUP BY m.id
             ORDER BY m.phase, m.id
         `;
-        db.all(sql, [tournament_id], callback);
+        return dbAll(sql, [tournament_id]);
     },
 
-    updateMatch: (id, score, team_winner, callback) => { // Added team_winner
-        const db = getDb();
-        db.run('UPDATE matches SET score = ?, team_winner = ? WHERE id = ?', // Updated table name to 'matches'
-            [score, team_winner, id],
-            function(err) {
-                callback(err, { changes: this.changes });
-            }
-        );
+    async updateMatch(id, scoreData, team_winner) {
+        const sql = `UPDATE matches SET 
+                        score_teamA_set1 = ?, score_teamB_set1 = ?,
+                        score_teamA_set2 = ?, score_teamB_set2 = ?,
+                        score_teamA_set3 = ?, score_teamB_set3 = ?,
+                        team_winner = ?, end_timestamp = CURRENT_TIMESTAMP
+                    WHERE id = ?`;
+        
+        const params = [
+            scoreData.score_teamA_set1, scoreData.score_teamB_set1,
+            scoreData.score_teamA_set2, scoreData.score_teamB_set2,
+            scoreData.score_teamA_set3, scoreData.score_teamB_set3,
+            team_winner,
+            id
+        ];
+
+        return dbRun(sql, params);
     },
 
-    deleteMatch: (id, callback) => {
-        const db = getDb();
-        db.run('DELETE FROM matches WHERE id = ?', [id], function(err) { // Updated table name to 'matches'
-            callback(err, { changes: this.changes });
-        });
+    async deleteMatch(id) {
+        return dbRun('DELETE FROM matches WHERE id = ?', [id]);
     },
 
-    assignCourtToMatch: (match_id, court_id, callback) => {
-        const db = getDb();
-        db.run('UPDATE matches SET court_id = ? WHERE id = ?', // Updated table name to 'matches'
-            [court_id, match_id],
-            function(err) {
-                callback(err, { changes: this.changes });
-            }
-        );
+    async assignCourtToMatch(match_id, court_id) {
+        const sql = 'UPDATE matches SET court_id = ? WHERE id = ?';
+        return dbRun(sql, [court_id, match_id]);
     }
 };
 

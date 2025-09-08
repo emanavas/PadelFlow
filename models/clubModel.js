@@ -1,33 +1,20 @@
-const { getDb } = require('../db/database');
+const { dbRun, dbGet, dbAll } = require('../db/dbHelpers');
 
 const clubModel = {
-createClub: (name, address, city, contact_email, contact_phone, callback) => {
-        const db = getDb();
-        db.run('INSERT INTO Clubs (name, address, city, email, phone) VALUES (?, ?, ?, ?, ?)', 
-               [name, address, city, contact_email, contact_phone], function(err) {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, { id: this.lastID || null }); 
-        });
+    async createClub(name, address, city, contact_email, contact_phone) {
+        const sql = 'INSERT INTO Clubs (name, address, city, email, phone) VALUES (?, ?, ?, ?, ?)';
+        return dbRun(sql, [name, address, city, contact_email, contact_phone]);
     },
 
-    getClubById: (id, callback) => {
-        const db = getDb();
-        db.get('SELECT * FROM Clubs WHERE id = ?', [id], (err, row) => {
-            callback(err, row);
-        });
+    async getClubById(id) {
+        return dbGet('SELECT * FROM Clubs WHERE id = ?', [id]);
     },
 
-    getClubPlan: (clubId, callback) => {
-        const db = getDb();
-        db.get('SELECT plan FROM Clubs WHERE id = ?', [clubId], (err, row) => {
-            callback(err, row);
-        });
+    async getClubPlan(clubId) {
+        return dbGet('SELECT plan FROM Clubs WHERE id = ?', [clubId]);
     },
 
-    getClubsByActivity: (callback) => {
-        const db = getDb();
+    async getClubsByActivity() {
         const sql = `
             SELECT
                 C.id,
@@ -43,25 +30,15 @@ createClub: (name, address, city, contact_email, contact_phone, callback) => {
                 tournament_count DESC
             LIMIT 10;
         `;
-        db.all(sql, [], (err, rows) => {
-            callback(err, rows);
-        });
+        return dbAll(sql);
     },
 
-    getAllClubs: (callback) => {
-        const db = getDb();
-        const sql = `SELECT * FROM Clubs`;
-        db.all(sql, [], (err, rows) => {
-            callback(err, rows);
-        });
+    async getAllClubs() {
+        return dbAll('SELECT * FROM Clubs');
     },
 
-    deleteClub: (id, callback) => {
-        const db = getDb();
-        const sql = 'DELETE FROM Clubs WHERE id = ?';
-        db.run(sql, [id], function(err) {
-            callback(err, { changes: this.changes });
-        });
+    async deleteClub(id) {
+        return dbRun('DELETE FROM Clubs WHERE id = ?', [id]);
     }
 };
 

@@ -1,15 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const util = require('util');
 
 const tournamentModel = require('../models/tournamentModel');
 const matchModel = require('../models/matchModel');
 const playerModel = require('../models/playerModel');
-
-// Promisify model functions
-const getTournamentByIdAsync = util.promisify(tournamentModel.getTournamentById);
-const getMatchesByTournamentIdAsync = util.promisify(matchModel.getMatchesByTournamentId);
-const getPlayerByIdAsync = util.promisify(playerModel.getPlayerById);
 
 // Ruta para cambiar el idioma
 router.get('/lang/:lng', (req, res) => {
@@ -28,12 +22,12 @@ router.get('/wallshow/:tournamentId', async (req, res) => {
     try {
         const tournamentId = req.params.tournamentId;
 
-        const tournament = await getTournamentByIdAsync(tournamentId);
+        const tournament = await tournamentModel.getTournamentById(tournamentId);
         if (!tournament) {
             return res.status(404).send('Torneo no encontrado.');
         }
 
-        const matches = await getMatchesByTournamentIdAsync(tournamentId);
+        const matches = await matchModel.getMatchesByTournamentId(tournamentId);
 
         if (matches.length === 0) {
             return res.render('public/live_dashboard', { tournament: tournament, matches: [] });
@@ -41,8 +35,8 @@ router.get('/wallshow/:tournamentId', async (req, res) => {
 
         // Fetch player names for each match concurrently
         const matchesWithPlayerNames = await Promise.all(matches.map(async (match) => {
-            const player1 = await getPlayerByIdAsync(match.player1_id);
-            const player2 = await getPlayerByIdAsync(match.player2_id);
+            const player1 = await playerModel.getPlayerById(match.player1_id);
+            const player2 = await playerModel.getPlayerById(match.player2_id);
             return {
                 ...match,
                 player1_name: player1 ? player1.name : 'N/A',

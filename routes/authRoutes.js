@@ -1,19 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const util = require('util');
 
 const clubModel = require('../models/clubModel');
 const playerModel = require('../models/playerModel');
 const userModel = require('../models/userModel');
-
-// Promisify functions
-const findUserByEmailAsync = util.promisify(userModel.findUserByEmail);
-const createUserAsync = util.promisify(userModel.createUser);
-const createClubAsync = util.promisify(clubModel.createClub);
-const createPlayerAsync = util.promisify(playerModel.createPlayer);
-const compareAsync = util.promisify(bcrypt.compare);
-const hashAsync = util.promisify(bcrypt.hash);
 
 // Route to display login form
 router.get('/login', (req, res) => {
@@ -28,13 +19,13 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await findUserByEmailAsync(email);
+        const user = await userModel.findUserByEmail(email);
         if (!user) {
             req.session.mensaje = 'Credenciales inválidas.';
             return res.redirect('/login');
         }
 
-        const isMatch = await compareAsync(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             req.session.mensaje = 'Credenciales inválidas.';
             return res.redirect('/login');
@@ -72,20 +63,20 @@ router.get('/signup', (req, res) => {
 router.post('/signup', async (req, res) => {
     try {
         const { userType, clubName, email, password } = req.body; 
-        const hashedPassword = await hashAsync(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         if (userType === 'club_admin') {
             if (!clubName) {
                 return res.status(400).send('Club Name is required for Club Admin registration.');
             }
-            const clubResult = await createClubAsync(clubName);
+            const clubResult = await clubModel.createClub(clubName);
             const clubId = clubResult.id;
 
-            await createUserAsync(email, hashedPassword, 'club_admin', clubId);
+            await userModel.createUser(email, hashedPassword, 'club_admin', clubId);
             console.log('Club and Club Admin registered');
             res.redirect('/login');
         } else if (userType === 'platform_admin') {
-            await createUserAsync(email, hashedPassword, 'platform_admin', null);
+            await userModel.createUser(email, hashedPassword, 'platform_admin', null);
             console.log('Platform Admin registered');
             res.redirect('/login');
         } else {
@@ -106,10 +97,10 @@ router.get('/player/register', (req, res) => {
 router.post('/player/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const hashedPassword = await hashAsync(password, 10);
-        const userResult = await createUserAsync(email, hashedPassword, 'player', null);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const userResult = await userModel.createUser(email, hashedPassword, 'player', null);
         const userId = userResult.id;
-        await createPlayerAsync(null, userId, name);
+        await playerModel.createPlayer(null, userId, name);
         console.log('Player self-registered:', userId);
         res.redirect('/login');
     } catch (err) {
@@ -122,10 +113,10 @@ router.post('/player/register', async (req, res) => {
 router.post('/player/signup', async (req, res) => {
     try {
         const { tournamentId, name, email, password } = req.body;
-        const hashedPassword = await hashAsync(password, 10);
-        const userResult = await createUserAsync(email, hashedPassword, 'player', null);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const userResult = await userModel.createUser(email, hashedPassword, 'player', null);
         const userId = userResult.id;
-        await createPlayerAsync(tournamentId, userId, name);
+        await playerModel.createPlayer(tournamentId, userId, name);
         console.log('Player user and entry registered:', userId);
         res.status(200).send('Player registered successfully.');
     } catch (err) {

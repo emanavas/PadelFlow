@@ -9,5 +9,14 @@
   "noAccount": "Don't have an account? Sign up",
   "features": "Features",
   "plans": "Plans",
-  "contact": "Contact"
+  "contact": "Contact",
+  "round_final": "Final",
+  "round_semifinal": "Semifinal",
+  "round_quarterfinal": "Quarter-final",
+  "round_of_16": "Round of 16",
+  "round_of_32": "Round of 32",
+  "round_of_64": "Round of 64",
+  "round_of_128": "Round of 128",
+  "side_right": "right",
+  "side_left": "left"
 }
