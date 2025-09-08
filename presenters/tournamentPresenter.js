@@ -90,6 +90,9 @@ function formatMatchesForBracket(matches, t) {
 
     var roundsA = createPhaseArray(phaseA);
     var roundsB = createPhaseArray(phaseB);
+    // crear nuevo array ordenado por longitud de elementos que tienen cada ronda combinando A y B
+    var mixedRounds = createPhaseArray(phaseA.concat(phaseB));  
+
 
     // etiquetas
     phaseA.forEach(function(match) {
@@ -107,6 +110,7 @@ function formatMatchesForBracket(matches, t) {
         roundsA: roundsA,
         final: phaseF, // Usamos el array directamente
         roundsB: roundsB,
+        mixedRounds: mixedRounds
     };
 }
 
