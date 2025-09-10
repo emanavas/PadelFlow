@@ -193,7 +193,7 @@ const tournamentModel = {
      */
     getMatchesWithPlayersByTournament: async (tournamentId) => {
         try {
-            const matches = await dbAll('SELECT * FROM matches WHERE tournament_id = ? ORDER BY id', [tournamentId]);
+            const matches = await dbAll('SELECT * FROM matches WHERE tournament_id = ? ORDER BY id ', [tournamentId]);
             
             for (const match of matches) {
                 match.players = {

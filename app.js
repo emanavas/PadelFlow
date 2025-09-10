@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const i18next = require('i18next');
 const i18nextMiddleware = require('i18next-http-middleware');
 const Backend = require('i18next-fs-backend');
@@ -36,7 +37,9 @@ const app = express();
 // Configuración de Express
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static('public'));
+app.use('/vendor/bootstrap', express.static(__dirname + '/node_modules/bootstrap'));
 
 // Middleware de i18next
 app.use(i18nextMiddleware.handle(i18next));
@@ -57,6 +60,23 @@ app.use((req, res, next) => {
     res.locals.t = req.t;
     res.locals.currentLanguage = req.language;
     next();
+});
+
+// Middleware to detect device type from cookie
+app.use((req, res, next) => {
+  const width = parseInt(req?.cookies?.deviceWidth, 10);
+  if (width) {
+    if (width < 768) {
+      res.locals.deviceType = 'mobile';
+    } else if (width >= 768 && width < 992) {
+      res.locals.deviceType = 'tablet';
+    } else {
+      res.locals.deviceType = 'desktop';
+    }
+  } else {
+    res.locals.deviceType = 'unknown'; // Default to unknown if no cookie
+  }
+  next();
 });
 
 // Usar archivos de rutas

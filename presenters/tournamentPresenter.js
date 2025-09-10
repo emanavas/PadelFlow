@@ -91,7 +91,13 @@ function formatMatchesForBracket(matches, t) {
     var roundsA = createPhaseArray(phaseA);
     var roundsB = createPhaseArray(phaseB);
     // crear nuevo array ordenado por longitud de elementos que tienen cada ronda combinando A y B
-    var mixedRounds = createPhaseArray(phaseA.concat(phaseB));  
+    var mixedRounds = createPhaseArray(phaseA.concat(phaseB));
+
+    // Ordenar mixedRounds por la longitud de sus claves (número de elementos en cada ronda) de mayor a menor
+    mixedRounds = Object.entries(mixedRounds).sort((a, b) => b[1].length - a[1].length);
+    // eliminar las claves y dejar solo los arrays de matches
+    var mixedRoundsOrdered = mixedRounds.map(entry => entry[1]);
+
 
 
     // etiquetas
@@ -110,7 +116,8 @@ function formatMatchesForBracket(matches, t) {
         roundsA: roundsA,
         final: phaseF, // Usamos el array directamente
         roundsB: roundsB,
-        mixedRounds: mixedRounds
+        mixedRounds: mixedRounds,
+        mixedRoundsOrdered: mixedRoundsOrdered
     };
 }
 
