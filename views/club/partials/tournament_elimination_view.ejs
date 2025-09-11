@@ -1,3 +1,21 @@
+<style>
+.connector {
+    background-color: #161212ff;
+    height: 2px;
+    /* width: 100%; */
+    position: absolute;
+    right: -30px;
+    z-index: -1;
+}
+.vertical-line {
+    background-color: #161212ff;
+    width: 2px;
+    position: absolute;
+    right: -30px;
+    transition: all 0.1s ease-out;
+    z-index: -1;
+}
+</style>
 <div class="bracket-container-wrapper">
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Bracket del Torneo</h5>
@@ -27,7 +45,7 @@
                                 
                                 
                                     <% roundMatches.forEach(match => { %>
-                                        <div class="card">
+                                        <div class="card position-relative">
                                             <div class="card-body">
                                                 <div class="text-muted text-center border-bottom mb-1 pb-1">
                                                     <small><i class="fas fa-clock me-1"></i> <%= match?.startTime || 'N/A' %></small>
@@ -54,6 +72,8 @@
                                             <div class="card-footer text-center p-1">
                                                 <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#scoreModal" data-match-id="<%= match.id %>">Registrar</button>
                                             </div>
+                                            <div class="connector"></div>
+                                            <div class="vertical-line"></div>
                                         </div>
                                     <% }); %>
                                 
@@ -72,9 +92,83 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
+    function getPosition( element ) {
+        var rect = element.getBoundingClientRect();
+        return {
+            x: rect.left,
+            y: rect.top
+        };
+    }
+
+    function getSize( element ) {
+        var rect = element.getBoundingClientRect();
+        return {
+            width: rect.width,
+            height: rect.height
+        };
+    }
+
+    function updateConnectors() {
+        setTimeout(() => {
+                // get element inside slides and adjust height
+            const slideElements = document.querySelectorAll('.bracket-round');
+            // for each slide get the content
+            slideElements.forEach((slide, index) => {
+                //console.log(`Slide ${index}: has this children:`, slide.children);
+                // iterate children and get height and position
+                let match1 = null;
+                let match2 = null;
+                // console.log(slide.children.length);
+
+                for (let i = 0; i < slide.children.length; i++) {
+                    const content = slide.children[i];
+                    if (content) {
+                        var pos = getPosition( content );
+                        var size = getSize( content );
+
+                        // Alert position in X axis
+                        // console.log( `posx: ${pos.x} posy: ${pos.y}` );
+                        // create connector lines
+
+                        const connector = content.querySelector('.connector');
+                        connector.style.top = `${size.height/2}px`;
+                        connector.style.width = `${size.width}px`;
+                        if (i % 2 === 0 ) {
+                            match1 = {
+                                x: pos.x,
+                                y: pos.y,
+                                width: size.width,
+                                height: size.height
+                            };
+                            //pos,size;
+                        } else {
+                            match2 = {
+                                x: pos.x,
+                                y: pos.y,
+                                width: size.width,
+                                height: size.height
+                            };
+                            // draw vertical line between match1 and match2
+                            const verticalLine = content.querySelector('.vertical-line');
+                            verticalLine.style.height = `${match2.y - match1.y}px`;
+                            verticalLine.style.bottom = `${(match1.height/2)-4}px` ;
+                            // reset match1 and match2
+                            match1 = null;
+                            match2 = null;
+                        }
+
+                    }
+                };
+            });
+        }, 150);
+        
+    }
+
+
     var swiper = new Swiper('.mySwiper', {
         slidesPerView: 3,
-        spaceBetween: 30,
+        spaceBetween: 60,
         navigation: {
             nextEl: '#swiper-button-next',
             prevEl: '#swiper-button-prev',
@@ -82,15 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
         breakpoints: {
             120: {
                 slidesPerView: 1,
-                spaceBetween: 10,
+                spaceBetween: 30,
             },
             768: {
                 slidesPerView: 2,
-                spaceBetween: 20,
+                spaceBetween: 60,
             },
-            1024: {
+            1440: {
                 slidesPerView: 3,
-                spaceBetween: 30,
+                spaceBetween: 60,
             },
         },
         // Optional: Enable loop mode
@@ -98,6 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // modify height based on content
         autoHeight: true,
         on: {
+            init: function() {
+                updateConnectors();
+            },
+
             slideNextTransitionEnd: function() {
                 // update height of next slides
                 for(let i = this.activeIndex ; i < this.slides.length; i++) {
@@ -110,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     for(let i = this.activeIndex ; i < this.slides.length; i++) {
                         this.slides[i].classList.add('h-100');
                     }
+                    updateConnectors();
                 }, 50);
                 
             },
@@ -124,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     for(let i = 0; i < this.slides.length; i++) {
                         this.slides[i].classList.add('h-100');
                     }
+                    updateConnectors();
                 }, 50);
             },
             resize: function() {
@@ -137,8 +237,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     for(let i = 0; i < this.slides.length; i++) {
                         this.slides[i].classList.add('h-100');
                     }
+                    updateConnectors();
                 }, 50);
-            }
+            },
         },
         
     });
