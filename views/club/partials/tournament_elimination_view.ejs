@@ -1,71 +1,146 @@
-
-<div class="bracket-container mb-4" >
+<div class="bracket-container-wrapper">
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Bracket del Torneo</h5>
         <div>
-            <button class="btn btn-sm btn-outline-secondary me-2" type="button" data-bs-target="#bracketCarousel" data-bs-slide="prev">
+            <button type="button" id="swiper-button-prev" class="btn btn-sm btn-outline-secondary me-2">
                 <i class="fas fa-chevron-left"></i>
-                <span class="visually-hidden">Anterior</span>
             </button>
-            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-target="#bracketCarousel" data-bs-slide="next">
+            <button type="button" id="swiper-button-next" class="btn btn-sm btn-outline-secondary ">
                 <i class="fas fa-chevron-right"></i>
-                <span class="visually-hidden">Siguiente</span>
             </button>
         </div>
     </div>
-    <div id="bracketCarousel" class="carousel slide" data-bs-interval="false">
-        <div class="carousel-inner">
-            <% /* order mixedRound by length */%>
-            <% locals?.viewModel?.bracketData?.mixedRoundsOrdered.forEach((level, index) => { // get level of tournament %>>
 
-                <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
-                    <% level.forEach(match => { %>
-                        <div class="card">
-                            <div class="card-header text-center">
-                                <%- level?.phaseLabel || 'N/A' %>
-                            </div>
-                            <div class="card-body p-2">
-                                <div class="text-muted text-center border-bottom mb-1 pb-1">
-                                    <small><i class="fas fa-clock me-1"></i> <%= match?.startTime || 'N/A' %></small>
-                                    <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i> <%= match?.courtName || 'N/A' %></small>
-                                </div>
-                                <div class="d-flex justify-content-around border-bottom mb-1 pb-1"><small>Team</small><small class="ms-2">Sets</small></div>
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <small class="truncate-text"><strong>A</strong> <%= match?.players?.teamA.map(p => p.name).join('/') || 'Equipo A' %></small>
-                                    <div class="d-flex mx-1">
-                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set1 || '-' %></span>
-                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set2 || '-' %></span>
-                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set3 || '-' %></span>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="truncate-text"><strong>B</strong> <%= match?.players?.teamB.map(p => p.name).join('/') || 'Equipo B' %></small>
-                                    <div class="d-flex mx-1">
-                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set1 || '-' %></span>
-                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set2 || '-' %></span>
-                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set3 || '-' %></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-footer text-center p-1">
-                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#scoreModal" data-match-id="<%= match.id %>">Registrar</button>
+    <!-- Swiper -->
+    <div class="swiper mySwiper my-4">
+        <div class="swiper-wrapper">
+            <%
+            const mixedRoundsOrdered = locals?.viewModel?.bracketData?.mixedRoundsOrdered || [];
+            %>
+
+            <% if (mixedRoundsOrdered.length > 0) { %>
+                <% mixedRoundsOrdered.forEach(roundMatches => { %>
+                    <% if (roundMatches.length > 0) { %>
+                        <div class="swiper-slide d-flex flex-column h-100">
+                            <h5 class="text-center"><%- roundMatches[0]?.phaseLabel || 'Ronda' %></h5>
+                            <div class="bracket-round flex-grow-1 d-flex flex-column justify-content-around gap-3">
+                                
+                                
+                                    <% roundMatches.forEach(match => { %>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="text-muted text-center border-bottom mb-1 pb-1">
+                                                    <small><i class="fas fa-clock me-1"></i> <%= match?.startTime || 'N/A' %></small>
+                                                    <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i> <%= match?.courtName || 'N/A' %></small>
+                                                </div>
+                                                <div class="d-flex justify-content-around border-bottom mb-1 pb-1"><small>Team</small><small class="ms-2">Sets</small></div>
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <small class="truncate-text"><strong>A</strong> <%= match?.players?.teamA.map(p => p.name).join('/') || 'Equipo A' %></small>
+                                                    <div class="d-flex mx-1">
+                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set1 || '-' %></span>
+                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set2 || '-' %></span>
+                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set3 || '-' %></span>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <small class="truncate-text"><strong>B</strong> <%= match?.players?.teamB.map(p => p.name).join('/') || 'Equipo B' %></small>
+                                                    <div class="d-flex mx-1">
+                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set1 || '-' %></span>
+                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set2 || '-' %></span>
+                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set3 || '-' %></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-footer text-center p-1">
+                                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#scoreModal" data-match-id="<%= match.id %>">Registrar</button>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                
                             </div>
                         </div>
-                    <% }); %>
+                    <% } %>
+                <% }); %>
+            <% } else { %>
+                <div class="swiper-slide">
+                    <div class="alert alert-info">No hay datos del cuadro para mostrar.</div>
                 </div>
-            <% }); %>
-
-            <% if (locals?.viewModel?.bracketData?.mixedRoundsOrdered?.length == 0) { %>
-                <div class="carousel-item active"><div class="alert alert-info">No hay datos del cuadro para mostrar.</div></div>
             <% } %>
         </div>
     </div>
 </div>
 
 <script>
-    // carousel initialization
-    var carousel = document.getElementById('bracketCarousel');
-    var carouselInstance = new bootstrap.Carousel(carousel, {
-        interval: false
+document.addEventListener('DOMContentLoaded', () => {
+    var swiper = new Swiper('.mySwiper', {
+        slidesPerView: 3,
+        spaceBetween: 30,
+        navigation: {
+            nextEl: '#swiper-button-next',
+            prevEl: '#swiper-button-prev',
+        },
+        breakpoints: {
+            120: {
+                slidesPerView: 1,
+                spaceBetween: 10,
+            },
+            768: {
+                slidesPerView: 2,
+                spaceBetween: 20,
+            },
+            1024: {
+                slidesPerView: 3,
+                spaceBetween: 30,
+            },
+        },
+        // Optional: Enable loop mode
+        loop: false,
+        // modify height based on content
+        autoHeight: true,
+        on: {
+            slideNextTransitionEnd: function() {
+                // update height of next slides
+                for(let i = this.activeIndex ; i < this.slides.length; i++) {
+                    // remove h-100 class
+                    this.slides[i].classList.remove('h-100');
+                }
+                this.updateAutoHeight();
+                // delay 100ms to allow height transition
+                setTimeout(() => {
+                    for(let i = this.activeIndex ; i < this.slides.length; i++) {
+                        this.slides[i].classList.add('h-100');
+                    }
+                }, 50);
+                
+            },
+            slidePrevTransitionEnd: function() {            
+                // restore height of all slides
+                for(let i = 0; i < this.slides.length; i++) {
+                    this.slides[i].classList.remove('h-100');
+                }
+                this.updateAutoHeight();
+                // delay 100ms to allow height transition
+                setTimeout(() => {
+                    for(let i = 0; i < this.slides.length; i++) {
+                        this.slides[i].classList.add('h-100');
+                    }
+                }, 50);
+            },
+            resize: function() {
+                // restore height of all slides
+                for(let i = 0; i < this.slides.length; i++) {
+                    this.slides[i].classList.remove('h-100');
+                }
+                this.updateAutoHeight();
+                // delay 100ms to allow height transition
+                setTimeout(() => {
+                    for(let i = 0; i < this.slides.length; i++) {
+                        this.slides[i].classList.add('h-100');
+                    }
+                }, 50);
+            }
+        },
+        
     });
+});
 </script>

@@ -39,12 +39,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('public'));
-app.use('/vendor/bootstrap', express.static(__dirname + '/node_modules/bootstrap'));
+
 
 // Middleware de i18next
 app.use(i18nextMiddleware.handle(i18next));
 
-// Configuración de EJS
 app.set('view engine', 'ejs');
 
 // Configuración de la sesión
@@ -64,19 +63,19 @@ app.use((req, res, next) => {
 
 // Middleware to detect device type from cookie
 app.use((req, res, next) => {
-  const width = parseInt(req?.cookies?.deviceWidth, 10);
-  if (width) {
+    const width = parseInt(req?.cookies?.deviceWidth, 10);
+    if (width) {
     if (width < 768) {
-      res.locals.deviceType = 'mobile';
+        res.locals.deviceType = 'mobile';
     } else if (width >= 768 && width < 992) {
-      res.locals.deviceType = 'tablet';
+        res.locals.deviceType = 'tablet';
     } else {
-      res.locals.deviceType = 'desktop';
+        res.locals.deviceType = 'desktop';
     }
-  } else {
+    } else {
     res.locals.deviceType = 'unknown'; // Default to unknown if no cookie
-  }
-  next();
+    }
+    next();
 });
 
 // Usar archivos de rutas

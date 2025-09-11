@@ -14,7 +14,7 @@ router.get('/lang/:lng', (req, res) => {
 
 // Ruta principal (ejemplo)
 router.get('/', (req, res) => {
-    res.render('index', { title: req.t('welcome') });
+    res.render('main', { title: req.t('welcome') });
 });
 
 // GET route for live wallshow

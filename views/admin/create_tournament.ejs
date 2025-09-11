@@ -2,72 +2,93 @@
 <html lang="es">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Dashboard — Crear Torneo</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/styles.css" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crear Torneo — PadelFlow</title>
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+    <link rel="stylesheet" href="/assets/css/dashboard.css" />
 </head>
 
 <body>
-  <%- include('partials/admin_header') %>
-    <div class="admin-shell">
-      <!-- Sidebar -->
-      <%- include('partials/admin_sidebar') %>
+    <%- include('partials/admin_header') %>
+        <div class="admin-shell">
+            <%- include('partials/admin_sidebar') %>
+                <div class="main flex-grow-1">
+                    <main class="container-fluid p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h1 class="h3 mb-0">Crear Nuevo Torneo</h1>
+                        </div>
 
-      <!-- Main -->
-      <div class="main flex-grow-1">
-        <!-- Content -->
-        <main class="container-fluid p-4">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">Crear Nuevo Torneo</h1>
-            <div>
-              <a href="/admin/dashboard" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Volver al Dashboard</a>
-            </div>
-          </div>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <form action="/admin/tournaments/create" method="POST">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Nombre del Torneo</label>
+                                        <input type="text" class="form-control" id="name" name="name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">Descripción</label>
+                                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="type" class="form-label">Tipo de Torneo</label>
+                                        <select class="form-select" id="type" name="type" required>
+                                            <option value="">Selecciona un tipo</option>
+                                            <option value="round-robin">Round Robin</option>
+                                            <option value="elimination">Eliminación Directa</option>
+                                            <option value="americana">Americana</option>
+                                        </select>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="startDate" class="form-label">Fecha de Inicio</label>
+                                            <input type="date" class="form-control" id="startDate" name="startDate" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="startTime" class="form-label">Hora de Inicio</label>
+                                            <input type="time" class="form-control" id="startTime" name="startTime" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="endDate" class="form-label">Fecha de Fin</label>
+                                            <input type="date" class="form-control" id="endDate" name="endDate" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="endTime" class="form-label">Hora de Fin</label>
+                                            <input type="time" class="form-control" id="endTime" name="endTime" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="courtIds" class="form-label">Pistas Asociadas</label>
+                                        <select class="form-select" id="courtIds" name="courtIds" multiple>
+                                            <% courts.forEach(court => { %>
+                                                <option value="<%= court.id %>"><%= court.name %></option>
+                                            <% }); %>
+                                        </select>
+                                        <small class="form-text text-muted">Mantén Ctrl/Cmd para seleccionar múltiples pistas.</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="setting" class="form-label">Configuración Específica</label>
+                                        <select class="form-select" id="setting" name="setting">
+                                            <option value="">Ninguna</option>
+                                            <option value="sets">Por Sets</option>
+                                            <option value="games">Por Juegos</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Crear Torneo</button>
+                                    <a href="/admin/dashboard" class="btn btn-secondary">Cancelar</a>
+                                </form>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+        </div>
 
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header">
-                <i class="fas fa-trophy me-2"></i>
-                Formulario de Creación de Torneo
-              </div>
-              <div class="card-body">
-                <form action="/tournaments/create" method="POST">
-                  <div class="mb-3">
-                      <label for="name" class="form-label">Nombre del Torneo</label>
-                      <input type="text" class="form-control" id="name" name="name" required>
-                  </div>
-                  <div class="mb-3">
-                      <label for="type" class="form-label">Tipo de Torneo</label>
-                      <select class="form-select" id="type" name="type" required>
-                          <option value="Round Robin">Round Robin</option>
-                          <option value="Elimination">Eliminación</option>
-                          <option value="League">Liga</option>
-                      </select>
-                  </div>
-                  <div class="mb-3">
-                      <label for="startDate" class="form-label">Fecha de Inicio</label>
-                      <input type="date" class="form-control" id="startDate" name="startDate" required>
-                  </div>
-                  <div class="mb-3">
-                      <label for="endDate" class="form-label">Fecha de Fin</label>
-                      <input type="date" class="form-control" id="endDate" name="endDate" required>
-                  </div>
-                  <button type="submit" class="btn btn-primary">Crear Torneo</button>
-                  <a href="/admin/dashboard" class="btn btn-secondary">Cancelar</a>
-                </form>
-              </div>
-            </div>
-          </div>
-
-        </main>
-      </div>
-    </div>
-
-    <script src="/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/assets/js/main.js"></script>
 </body>
 
 </html>

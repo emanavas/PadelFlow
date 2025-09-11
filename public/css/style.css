@@ -5,3 +5,8 @@
     display: block; /* or inline-block, depending on desired layout */
     max-width: 150px; /* Adjust this value as needed */
 }
+
+* {
+    box-sizing: border-box;
+}
+
