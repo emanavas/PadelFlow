@@ -6,6 +6,7 @@
     position: absolute;
     right: -30px;
     z-index: -1;
+    transition: all 0.1s ease-out;
 }
 .vertical-line {
     background-color: #161212ff;
@@ -16,79 +17,85 @@
     z-index: -1;
 }
 </style>
-<div class="bracket-container-wrapper">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Bracket del Torneo</h5>
-        <div>
-            <button type="button" id="swiper-button-prev" class="btn btn-sm btn-outline-secondary me-2">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button type="button" id="swiper-button-next" class="btn btn-sm btn-outline-secondary ">
-                <i class="fas fa-chevron-right"></i>
-            </button>
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Bracket del Torneo</h5>
+            <div>
+                <button type="button" id="swiper-button-prev" class="btn btn-sm btn-outline-secondary me-2">
+                    <i class="fas fa-chevron-left"></i> Previous round
+                </button>
+                <button type="button" id="swiper-button-next" class="btn btn-sm btn-outline-secondary ">
+                    <i class="fas fa-chevron-right"></i> Next round
+                </button>
+            </div>
         </div>
     </div>
+    <div class="card-body">
+        <div class="bracket-container-wrapper">
+            <!-- Swiper -->
+            <div class="swiper mySwiper my-4">
+                <div class="swiper-wrapper">
+                    <%
+                    const mixedRoundsOrdered = locals?.viewModel?.bracketData?.mixedRoundsOrdered || [];
+                    %>
 
-    <!-- Swiper -->
-    <div class="swiper mySwiper my-4">
-        <div class="swiper-wrapper">
-            <%
-            const mixedRoundsOrdered = locals?.viewModel?.bracketData?.mixedRoundsOrdered || [];
-            %>
-
-            <% if (mixedRoundsOrdered.length > 0) { %>
-                <% mixedRoundsOrdered.forEach(roundMatches => { %>
-                    <% if (roundMatches.length > 0) { %>
-                        <div class="swiper-slide d-flex flex-column h-100">
-                            <h5 class="text-center"><%- roundMatches[0]?.phaseLabel || 'Ronda' %></h5>
-                            <div class="bracket-round flex-grow-1 d-flex flex-column justify-content-around gap-3">
-                                
-                                
-                                    <% roundMatches.forEach(match => { %>
-                                        <div class="card position-relative">
-                                            <div class="card-body">
-                                                <div class="text-muted text-center border-bottom mb-1 pb-1">
-                                                    <small><i class="fas fa-clock me-1"></i> <%= match?.startTime || 'N/A' %></small>
-                                                    <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i> <%= match?.courtName || 'N/A' %></small>
-                                                </div>
-                                                <div class="d-flex justify-content-around border-bottom mb-1 pb-1"><small>Team</small><small class="ms-2">Sets</small></div>
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <small class="truncate-text"><strong>A</strong> <%= match?.players?.teamA.map(p => p.name).join('/') || 'Equipo A' %></small>
-                                                    <div class="d-flex mx-1">
-                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set1 || '-' %></span>
-                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set2 || '-' %></span>
-                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set3 || '-' %></span>
+                    <% if (mixedRoundsOrdered.length > 0) { %>
+                        <% mixedRoundsOrdered.forEach(roundMatches => { %>
+                            <% if (roundMatches.length > 0) { %>
+                                <div class="swiper-slide d-flex flex-column h-100">
+                                    <h5 class="text-center"><%- roundMatches[0]?.phaseLabel || 'Ronda' %></h5>
+                                    <div class="bracket-round flex-grow-1 d-flex flex-column justify-content-around gap-3">
+                                        
+                                        
+                                            <% roundMatches.forEach(match => { %>
+                                                <div class="card position-relative">
+                                                    <div class="card-body">
+                                                        <div class="text-muted text-center border-bottom mb-1 pb-1">
+                                                            <small><i class="fas fa-clock me-1"></i> <%= match?.startTime || 'N/A' %></small>
+                                                            <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i> <%= match?.courtName || 'N/A' %></small>
+                                                        </div>
+                                                        <div class="d-flex justify-content-around border-bottom mb-1 pb-1"><small>Team</small><small class="ms-2">Sets</small></div>
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <small class="truncate-text"><strong>A</strong> <%= match?.players?.teamA.map(p => p.name).join('/') || 'Equipo A' %></small>
+                                                            <div class="d-flex mx-1">
+                                                                <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set1 || '-' %></span>
+                                                                <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set2 || '-' %></span>
+                                                                <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set3 || '-' %></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <small class="truncate-text"><strong>B</strong> <%= match?.players?.teamB.map(p => p.name).join('/') || 'Equipo B' %></small>
+                                                            <div class="d-flex mx-1">
+                                                                <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set1 || '-' %></span>
+                                                                <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set2 || '-' %></span>
+                                                                <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set3 || '-' %></span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="truncate-text"><strong>B</strong> <%= match?.players?.teamB.map(p => p.name).join('/') || 'Equipo B' %></small>
-                                                    <div class="d-flex mx-1">
-                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set1 || '-' %></span>
-                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set2 || '-' %></span>
-                                                        <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set3 || '-' %></span>
+                                                    <div class="card-footer text-center p-1">
+                                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#scoreModal" data-match-id="<%= match.id %>">Registrar</button>
                                                     </div>
+                                                    <div class="connector"></div>
+                                                    <div class="vertical-line"></div>
                                                 </div>
-                                            </div>
-                                            <div class="card-footer text-center p-1">
-                                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#scoreModal" data-match-id="<%= match.id %>">Registrar</button>
-                                            </div>
-                                            <div class="connector"></div>
-                                            <div class="vertical-line"></div>
-                                        </div>
-                                    <% }); %>
-                                
-                            </div>
+                                            <% }); %>
+                                        
+                                    </div>
+                                </div>
+                            <% } %>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="swiper-slide">
+                            <div class="alert alert-info">No hay datos del cuadro para mostrar.</div>
                         </div>
                     <% } %>
-                <% }); %>
-            <% } else { %>
-                <div class="swiper-slide">
-                    <div class="alert alert-info">No hay datos del cuadro para mostrar.</div>
                 </div>
-            <% } %>
+            </div>
         </div>
     </div>
 </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -195,7 +202,23 @@ document.addEventListener('DOMContentLoaded', () => {
             init: function() {
                 updateConnectors();
             },
-
+            beforeTransitionStart: function() {
+                // make all connectors invisible before transition starts
+                const connectors = document.querySelectorAll('.connector, .vertical-line');
+                connectors.forEach(connector => {
+                    connector.style.opacity = '0';
+                });
+            },
+            transitionEnd: function() {
+                setTimeout(() => {
+                    // make all connectors visible after transition ends
+                    const connectors = document.querySelectorAll('.connector, .vertical-line');
+                    connectors.forEach(connector => {
+                        connector.style.opacity = '1';
+                    });
+                }, 300);
+                
+            },
             slideNextTransitionEnd: function() {
                 // update height of next slides
                 for(let i = this.activeIndex ; i < this.slides.length; i++) {

@@ -46,11 +46,11 @@ function formatMatchesForBracket(matches, t) {
 
     var getRoundLevel = function(phase) {
         if (phase === 'F') return 0; // Final
-        if (phase === 'A' || phase === 'B') return 0; // Semifinales
+        if (phase === 'A' || phase === 'B') return 1; // Semifinales
         var parts = phase.split('-');
-        if (parts.length === 2) return 1; // Cuartos
-        if (parts.length === 3) return 2; // Octavos
-        if (parts.length === 4) return 3; // Dieciseisavos
+        if (parts.length === 2) return 2; // Cuartos
+        if (parts.length === 3) return 3; // Octavos
+        if (parts.length === 4) return 4; // Dieciseisavos
         return -1;
     };
 
@@ -91,7 +91,7 @@ function formatMatchesForBracket(matches, t) {
     var roundsA = createPhaseArray(phaseA);
     var roundsB = createPhaseArray(phaseB);
     // crear nuevo array ordenado por longitud de elementos que tienen cada ronda combinando A y B
-    var mixedRounds = createPhaseArray(phaseA.concat(phaseB));
+    var mixedRounds = createPhaseArray(phaseA.concat(phaseB, phaseF));
 
     // Ordenar mixedRounds por la longitud de sus claves (número de elementos en cada ronda) de mayor a menor
     mixedRounds = Object.entries(mixedRounds).sort((a, b) => b[1].length - a[1].length);

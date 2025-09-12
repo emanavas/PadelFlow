@@ -8,6 +8,10 @@
       background-color: #f8f9fa;
     }
 
+    * {
+      box-sizing: border-box;
+    }
+
     .hero {
       background-image: linear-gradient(90deg, rgba(13,110,253,0.06), rgba(13,110,253,0.02));
     }

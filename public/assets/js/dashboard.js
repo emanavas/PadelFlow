@@ -1,29 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    const hideSidebarBtn = document.getElementById('hideSidebarBtn');
-    const adminShell = document.querySelector('.admin-shell');
-    const sidebarOverlay = document.querySelector('.sidebar-overlay');
-
-    if (adminShell) {
-        if (toggleSidebarBtn) {
-            toggleSidebarBtn.addEventListener('click', function () {
-                adminShell.classList.toggle('sidebar-toggled');
-            });
-        }
-
-        if (hideSidebarBtn) {
-            hideSidebarBtn.addEventListener('click', function () {
-                adminShell.classList.remove('sidebar-toggled');
-            });
-        }
-
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', function () {
-                adminShell.classList.remove('sidebar-toggled');
-            });
-        }
-    }
-
     // Viewers Chart
     const viewersChartCanvas = document.getElementById('viewersChart');
     if (viewersChartCanvas) {
