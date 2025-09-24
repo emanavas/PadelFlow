@@ -3,7 +3,6 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 
 const clubModel = require('../models/clubModel');
-const playerModel = require('../models/playerModel');
 const userModel = require('../models/userModel');
 
 // Route to display login form
@@ -20,12 +19,14 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await userModel.findUserByEmail(email);
+
         if (!user) {
             req.session.mensaje = 'Credenciales inválidas.';
             return res.redirect('/login');
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
+
         if (!isMatch) {
             req.session.mensaje = 'Credenciales inválidas.';
             return res.redirect('/login');
@@ -33,6 +34,7 @@ router.post('/login', async (req, res) => {
 
         req.session.userId = user.id;
         req.session.userRole = user.role;
+        req.session.user = user; // Store user object in session
 
         if (user.role === 'club_admin' && user.club_id) {
             req.session.clubId = user.club_id;
@@ -98,10 +100,8 @@ router.post('/player/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const userResult = await userModel.createUser(email, hashedPassword, 'player', null);
-        const userId = userResult.id;
-        await playerModel.createPlayer(null, userId, name);
-        console.log('Player self-registered:', userId);
+        await userModel.createUser(name, email, hashedPassword, 'player', null);
+        console.log('Player self-registered:', email);
         res.redirect('/login');
     } catch (err) {
         console.error('Error during player self-registration:', err.message);
@@ -112,12 +112,10 @@ router.post('/player/register', async (req, res) => {
 // Existing route for player registration (by club admin or tournament context)
 router.post('/player/signup', async (req, res) => {
     try {
-        const { tournamentId, name, email, password } = req.body;
+        const { name, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const userResult = await userModel.createUser(email, hashedPassword, 'player', null);
-        const userId = userResult.id;
-        await playerModel.createPlayer(tournamentId, userId, name);
-        console.log('Player user and entry registered:', userId);
+        await userModel.createUser(name, email, hashedPassword, 'player', null);
+        console.log('Player user and entry registered:', email);
         res.status(200).send('Player registered successfully.');
     } catch (err) {
         console.error('Error during player user registration:', err.message);

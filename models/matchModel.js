@@ -11,7 +11,7 @@ const matchModel = {
         try {
             await dbRun('BEGIN TRANSACTION;');
             for (const player of playersWithTeams) {
-                await dbRun('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)', [matchId, player.id, player.team]);
+                await dbRun('INSERT INTO match_players (match_id, user_id, team) VALUES (?, ?, ?)', [matchId, player.id, player.team]);
             }
             await dbRun('COMMIT;');
             return { message: `Added ${playersWithTeams.length} players to match ${matchId}.` };
@@ -27,13 +27,13 @@ const matchModel = {
             SELECT
                 m.*,
                 c.name as court_name,
-                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.name END) AS team_a_players,
-                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.name END) AS team_b_players,
-                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.id END) AS team_a_player_ids,
-                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.id END) AS team_b_player_ids
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN u.name END) AS team_a_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN u.name END) AS team_b_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN u.id END) AS team_a_player_ids,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN u.id END) AS team_b_player_ids
             FROM matches m
             LEFT JOIN match_players mp ON m.id = mp.match_id
-            LEFT JOIN players p ON mp.player_id = p.id
+            LEFT JOIN users u ON mp.user_id = u.id
             LEFT JOIN courts c ON m.court_id = c.id
             WHERE m.id = ?
             GROUP BY m.id
@@ -46,19 +46,37 @@ const matchModel = {
             SELECT
                 m.*,
                 c.name as court_name,
-                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.name END) AS team_a_players,
-                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.name END) AS team_b_players,
-                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN p.id END) AS team_a_player_ids,
-                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN p.id END) AS team_b_player_ids
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN u.name END) AS team_a_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN u.name END) AS team_b_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN u.id END) AS team_a_player_ids,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN u.id END) AS team_b_player_ids
             FROM matches m
             LEFT JOIN match_players mp ON m.id = mp.match_id
-            LEFT JOIN players p ON mp.player_id = p.id
+            LEFT JOIN users u ON mp.user_id = u.id
             LEFT JOIN courts c ON m.court_id = c.id
             WHERE m.tournament_id = ?
             GROUP BY m.id
             ORDER BY m.phase, m.id
         `;
         return dbAll(sql, [tournament_id]);
+    },
+
+    async getMatchesByTournamentAndPlayer(tournamentId, userId) {
+        const sql = `
+            SELECT
+                m.*,
+                c.name as court_name,
+                GROUP_CONCAT(CASE WHEN mp.team = 'A' THEN u.name END) AS team_a_players,
+                GROUP_CONCAT(CASE WHEN mp.team = 'B' THEN u.name END) AS team_b_players
+            FROM matches m
+            LEFT JOIN courts c ON m.court_id = c.id
+            JOIN match_players mp ON m.id = mp.match_id
+            JOIN users u ON mp.user_id = u.id
+            WHERE m.tournament_id = ? AND m.id IN (SELECT match_id FROM match_players WHERE user_id = ?)
+            GROUP BY m.id
+            ORDER BY m.start_timestamp
+        `;
+        return dbAll(sql, [tournamentId, userId]);
     },
 
     async updateMatch(id, scoreData, team_winner) {

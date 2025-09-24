@@ -1,0 +1,52 @@
+<header class="topbar navbar bg-white border-bottom sticky-top p-3">
+    <div class="container-fluid d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-light d-xxl-none" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+            <a href="/player/dashboard" class="d-flex align-items-center mb-3 text-decoration-none">
+                <i class="fas fa-user-ninja fa-2x text-info me-2"></i>
+                <div>
+                    <strong>PádelManager</strong><br />
+                    <small class="text-muted">Panel del Jugador</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none" id="userMenu"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="avatar bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2"
+                        style="width:40px;height:40px;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="text-end d-none d-sm-block">
+                        <div id="userName"><strong><%= user?.username || 'Jugador' %></strong></div>
+                        <small class="text-muted" id="userEmail"><%= user?.email || 'player@example.com' %></small>
+                    </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/player/profile"><i class="fas fa-user-circle me-2"></i> Mi Perfil</a></li>
+                    <li><a class="dropdown-item" href="/player/my-tournaments"><i class="fas fa-trophy me-2"></i> Mis Torneos</a></li>
+                    <li>
+                        <hr class="dropdown-divider" />
+                    </li>
+                    <li><a class="dropdown-item text-danger" href="/logout" id="signOutBtn"><i
+                                class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</header>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    const adminShell = document.querySelector('.player-shell'); // Changed to player-shell
+
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', function () {
+            adminShell.classList.toggle('sidebar-toggled');
+        });
+    }
+});
+</script>

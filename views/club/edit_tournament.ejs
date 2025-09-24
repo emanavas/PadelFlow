@@ -88,6 +88,18 @@
                         required>
                     </div>
                   </div>
+                  <div class="mb-3">
+                    <label for="max_players" class="form-label">Máximo de Jugadores</label>
+                    <select class="form-select" id="max_players" name="max_players" required>
+                        <option value="2" <%= tournament.max_players == 2 ? 'selected' : '' %>>2</option>
+                        <option value="4" <%= tournament.max_players == 4 ? 'selected' : '' %>>4</option>
+                        <option value="8" <%= tournament.max_players == 8 ? 'selected' : '' %>>8</option>
+                        <option value="16" <%= tournament.max_players == 16 ? 'selected' : '' %>>16</option>
+                        <option value="32" <%= tournament.max_players == 32 ? 'selected' : '' %>>32</option>
+                        <option value="64" <%= tournament.max_players == 64 ? 'selected' : '' %>>64</option>
+                        <option value="128" <%= tournament.max_players == 128 ? 'selected' : '' %>>128</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 

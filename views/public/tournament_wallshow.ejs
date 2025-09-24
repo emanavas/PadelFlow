@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wallshow: <%= tournament.name %> — PadelFlow</title>
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+    <link rel="stylesheet" href="/assets/css/dashboard.css" />
+    <link rel="stylesheet" href="/swiper/swiper-bundle.min.css" />
+</head>
+
+<body>
+    <div class="admin-shell">
+        <div class="main flex-grow-1">
+            <main class="container-fluid p-4">
+                <div class="d-flex flex-wrap justify-content-around align-items-center mb-4">
+                    <h1 class="h3 flex-grow-1">Wallshow del Torneo: <%= tournament.name %></h1>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tv me-2"></i>Wallshow</h5>
+                    </div>
+                    <div class="card-body overflow-hidden m-4">
+                        <div class="swiper-container">
+                            <div class="swiper-wrapper">
+                                <% if (courtsData && courtsData.length > 0) { %>
+                                    <% courtsData.forEach(court => { %>
+                                        <div class="swiper-slide">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h5>Pista: <%= court.name %></h5>
+                                                    <p class="mb-0"><small>Ronda: <%- currentRoundInPlay %></small></p>
+                                                </div>
+                                                <div class="card-body">
+                                                    <% if (court.currentMatch) { %>
+                                                        <h6 class="card-title">Partido en Juego</h6>
+                                                        <% 
+                                                            const currentTeamANames = court.currentMatch.players?.teamA?.map(p => p.name).join('/') || 'Equipo A';
+                                                            const currentTeamBNames = court.currentMatch.players?.teamB?.map(p => p.name).join('/') || 'Equipo B';
+                                                        %>
+                                                        <div class="match-item mb-3 pb-3 border-bottom">
+                                                            <p class="mb-1"><strong><%= currentTeamANames %> vs <%= currentTeamBNames %></strong></p>
+                                                            <p class="text-muted mb-0"><small><i class="fas fa-clock me-1"></i> <%= court.currentMatch.startTime %></small></p>
+                                                        </div>
+                                                    <% } else { %>
+                                                        <p class="text-muted">No hay partido en juego en esta pista.</p>
+                                                    <% } %>
+
+                                                    
+                                                    <% if (court.upcomingMatches && court.upcomingMatches.length > 0) { %>
+                                                        <h6 class="card-title mt-3">Próximos Partidos</h6>
+                                                        <% court.upcomingMatches.forEach(match => {
+                                                            const upcomingTeamANames = match.players?.teamA?.map(p => p.name).join('/') || 'Equipo A';
+                                                            const upcomingTeamBNames = match.players?.teamB?.map(p => p.name).join('/') || 'Equipo B';
+                                                        %>
+                                                            <div class="match-item mb-2 pb-2 border-bottom">
+                                                                <p class="mb-1"><strong><%= upcomingTeamANames %> vs <%= upcomingTeamBNames %></strong></p>
+                                                                <p class="text-muted mb-0"><small><i class="fas fa-clock me-1"></i> <%= match.startTime %></small></p>
+                                                            </div>
+                                                        <% }); %>
+                                                    <% } else { %>
+                                                        <p class="text-muted">No hay próximos partidos programados para esta pista.</p>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <div class="swiper-slide">
+                                        <div class="alert alert-info text-center">No hay datos de pistas o partidos para mostrar en el wallshow.</div>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <!-- Add Pagination -->
+                            <div class="swiper-pagination"></div>
+                            <!-- Add Navigation -->
+                            <div class="swiper-button-next"></div>
+                            <div class="swiper-button-prev"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/swiper/swiper-bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var swiper = new Swiper('.swiper-container', {
+                slidesPerView: 1,
+                spaceBetween: 30,
+                loop: true,
+                autoplay: {
+                    delay: 5000,
+                    disableOnInteraction: false,
+                },
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+            });
+        });
+    </script>
+</body>
+
+</html>

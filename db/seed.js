@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 const userModel = require('../models/userModel');
 const clubModel = require('../models/clubModel');
-const playerModel = require('../models/playerModel');
 const tournamentModel = require('../models/tournamentModel');
 const courtModel = require('../models/courtModel');
 const matchModel = require('../models/matchModel');
@@ -19,23 +18,22 @@ async function seedDatabase() {
         // 2. Crear Usuario Administrador del Club
         console.log('create platform admin user...')
         const platformAdminPassword = await bcrypt.hash('adminpassword', 10);
-        // Llamada directa a la función async del modelo
         await userModel.createUser('Platform Admin', 'admin@padelflow.com', platformAdminPassword, 'platform_admin');
         console.log('Platform admin user created: admin@padelflow.com / adminpassword');
 
         console.log('Creating club admin user...');
         const adminPassword = await bcrypt.hash('adminpassword', 10);
-        // Llamada directa a la función async del modelo
         await userModel.createUser('Admin Club', 'user1@padelflow.com', adminPassword, 'club_admin', clubId);
-        console.log('Club admin user created: admin@club.com / adminpassword');
+        console.log('Club admin user created: user1@padelflow.com / adminpassword');
 
         // 3. Crear 64 Jugadores
         console.log('Creating 64 players...');
         const playerPromises = [];
+        const playerPassword = await bcrypt.hash('password123', 10);
         for (let i = 1; i <= 64; i++) {
             const playerName = `Jugador ${i}`;
             const playerEmail = `jugador${i}@example.com`;
-            playerPromises.push( await playerModel.createPlayer(playerName, playerEmail, 'password123'));
+            playerPromises.push(userModel.createUser(playerName, playerEmail, playerPassword, 'player', null));
         }
         await Promise.all(playerPromises);
         console.log('64 players created successfully.');
@@ -56,9 +54,10 @@ async function seedDatabase() {
             type: 'Elimination',
             start_date: '2023-10-01T10:00',
             end_date: '2023-10-01T12:00',
-            settings: JSON.stringify({ 
+            max_players: 64,
+            settings: { 
                 "match_duration": 90,
-            })
+            }
         };
         const tournamentResult = await tournamentModel.createTournament(tournamentData);
         const tournamentId = tournamentResult.id;
@@ -66,7 +65,7 @@ async function seedDatabase() {
 
         // 6. Create and assign players to matches for the tournament
         console.log('Creating matches and assigning players...');
-        const players = await playerModel.getPlayersNotInTournament(tournamentId);
+        const players = await userModel.getUsersNotInTournament(tournamentId);
         const courts = await courtModel.getCourtsByClub(clubId);
 
 

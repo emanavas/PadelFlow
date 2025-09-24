@@ -1,0 +1,25 @@
+.player-shell {
+    display: flex;
+}
+
+.player-shell .main {
+    transition: margin-left .3s ease-in-out;
+}
+
+.player-shell.sidebar-toggled .sidebar {
+    left: 0;
+}
+
+.player-shell.sidebar-toggled .sidebar-overlay {
+    display: block;
+}
+
+@media (min-width: 1200px) {
+    .player-shell .sidebar {
+        left: 0;
+    }
+
+    .player-shell .main {
+        margin-left: 250px; /* Same as sidebar width */
+    }
+}

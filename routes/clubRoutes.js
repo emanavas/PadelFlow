@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 
 const { isAuthenticated, isClubAdmin } = require('../middlewares/authMiddleware');
 const { presentTournament } = require('../presenters/tournamentPresenter');
-const playerModel = require('../models/playerModel');
+const userModel = require('../models/userModel');
 const tournamentModel = require('../models/tournamentModel');
 const clubModel = require('../models/clubModel');
 const courtModel = require('../models/courtModel');
@@ -13,6 +13,12 @@ const { dbRun, dbGet, dbAll } = require('../db/dbHelpers');
 const { calculateWinner } = require('../utils/scoring');
 const { getBracketNavigation, getOppositeTeamSlot } = require('../utils/bracket');
 
+function isPowerOfTwo(n) {
+    if (typeof n !== 'number') {
+      return false;
+    }
+    return n > 0 && (n & (n - 1)) === 0;
+  }
 
 // Club Admin Dashboard
 router.get('/dashboard', isAuthenticated, async (req, res) => {
@@ -28,7 +34,7 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
         }
 
         const tournaments = await tournamentModel.getTournamentsByClubId(clubId);
-        const players = await playerModel.getPlayers();
+        const players = await userModel.getUsersByRole('player');
 
         res.render('club/dashboard', {
             user: req.user,
@@ -65,7 +71,7 @@ router.post('/players/create', async (req, res) => {
     try {
         const { name, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
-        await playerModel.createPlayer(name, email, hashedPassword);
+        await userModel.createUser(name, email, hashedPassword, 'player', null);
         res.redirect('/club/players');
     } catch (err) {
         console.error('Error creating player:', err.message);
@@ -84,7 +90,7 @@ router.get('/players', isAuthenticated, isClubAdmin, async (req, res) => {
         if (!club) {
             return res.status(404).send('Club not found.');
         }
-        const players = await playerModel.getPlayers();
+        const players = await userModel.getUsersByRole('player');
         res.render('club/players', { title: 'Jugadores del Club', players, club });
     } catch (err) {
         console.error('Error fetching players:', err.message);
@@ -101,7 +107,7 @@ router.get('/players/add-to-tournament/:id', async (req, res) => {
             return res.status(400).send('Club ID not found in session.');
         }
 
-        const player = await playerModel.getPlayerById(playerId);
+        const player = await userModel.findUserById(playerId);
         if (!player) {
             return res.status(404).send('Player not found.');
         }
@@ -136,7 +142,7 @@ router.get('/players/edit/:id', isAuthenticated, isClubAdmin, async (req, res) =
         if (!club) {
             return res.status(404).send('Club not found.');
         }
-        const player = await playerModel.getPlayerById(playerId);
+        const player = await userModel.findUserById(playerId);
         if (!player) {
             return res.status(404).send('Player not found.');
         }
@@ -152,7 +158,7 @@ router.post('/players/edit/:id', async (req, res) => {
     try {
         const playerId = req.params.id;
         const { name, email } = req.body;
-        await playerModel.updatePlayer(playerId, name);
+        await userModel.updateUser(playerId, { name, email });
         console.log(`Player ${playerId} updated.`);
         res.redirect('/club/players');
     } catch (err) {
@@ -296,9 +302,10 @@ router.get('/tournaments/:id/manage', isAuthenticated, isClubAdmin, async (req, 
         const [tournament, registeredPlayers, availablePlayers, club] = await Promise.all([
             tournamentModel.getTournamentById(tournamentId),
             tournamentModel.getPlayersByTournament(tournamentId),
-            playerModel.getPlayersNotInTournament(tournamentId),
+            userModel.getUsersNotInTournament(tournamentId),
             clubModel.getClubById(clubId)
         ]);
+        
 
         if (!tournament) {
             return res.status(404).send('Tournament not found.');
@@ -334,11 +341,11 @@ router.post('/tournaments/:id/add_player', isAuthenticated, isClubAdmin, async (
     try {
         const tournamentId = req.params.id;
         // Permite recibir datos por JSON (AJAX)
-        const playerId = req.body.playerId || req.body.playerId;
-        if (!playerId) {
+        const userId = req.body.playerId || req.body.userId;
+        if (!userId) {
             return res.status(400).send('Player ID is required.');
         }
-        await tournamentModel.addPlayerToTournament(tournamentId, playerId);
+        await tournamentModel.addPlayerToTournament(tournamentId, userId);
         // Si la petición es AJAX, responde con JSON
         if (req.headers['content-type'] === 'application/json') {
             return res.json({ success: true });
@@ -356,12 +363,12 @@ router.post('/tournaments/:id/add_player', isAuthenticated, isClubAdmin, async (
 router.post('/tournaments/:id/add_group', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
         const tournamentId = req.params.id;
-        const playerIds = req.body.playerIds.map(id => parseInt(id, 10)).sort((a, b) => a - b);
-        if (!Array.isArray(playerIds) || playerIds.length !== 2) {
+        const userIds = req.body.playerIds.map(id => parseInt(id, 10)).sort((a, b) => a - b);
+        if (!Array.isArray(userIds) || userIds.length !== 2) {
             return res.status(400).json({ success: false, message: 'Se requieren exactamente 2 jugadores.' });
         }
-        const teamId = `${playerIds[0]}-${playerIds[1]}`;
-        await tournamentModel.addPlayerGroupToTournament(tournamentId, playerIds, teamId);
+        const teamId = `${userIds[0]}-${userIds[1]}`;
+        await tournamentModel.addPlayerGroupToTournament(tournamentId, userIds, teamId);
         return res.json({ success: true });
     } catch (err) {
         return res.status(500).json({ success: false, message: 'Error al crear el grupo.' });
@@ -369,10 +376,10 @@ router.post('/tournaments/:id/add_group', isAuthenticated, isClubAdmin, async (r
 });
 
 // Handle removing a player from a tournament
-router.post('/tournaments/:tournament_id/remove_player/:player_id', isAuthenticated, isClubAdmin, async (req, res) => {
+router.post('/tournaments/:tournament_id/remove_player/:user_id', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
-        const { tournament_id, player_id } = req.params;
-        await tournamentModel.removePlayerFromTournament(tournament_id, player_id);
+        const { tournament_id, user_id } = req.params;
+        await tournamentModel.removePlayerFromTournament(tournament_id, user_id);
         res.redirect(`/club/tournaments/${tournament_id}/manage`);
     } catch (err) {
         console.error('Error removing player from tournament:', err.message);
@@ -512,7 +519,7 @@ router.post('/tournaments/:id/start_match', isAuthenticated, isClubAdmin, async 
             const clubId = req.session.clubId;
             const [tournament, availablePlayers, club, courts] = await Promise.all([
                 tournamentModel.getTournamentById(tournamentId),
-                playerModel.getPlayersNotInTournament(tournamentId),
+                userModel.getUsersNotInTournament(tournamentId),
                 clubModel.getClubById(clubId),
                 courtModel.getCourtsByTournament(tournamentId)
             ]);
@@ -546,7 +553,7 @@ router.get('/tournaments/:id/search_players', isAuthenticated, isClubAdmin, asyn
         const tournamentId = req.params.id;
         const q = req.query.q ? req.query.q.toLowerCase() : '';
         const limit = parseInt(req.query.limit) || 0;
-        let players = await playerModel.getPlayersNotInTournament(tournamentId);
+        let players = await userModel.getUsersNotInTournament(tournamentId);
         if (q) {
             players = players.filter(p => p.name.toLowerCase().includes(q));
         }
@@ -577,7 +584,7 @@ router.post('/tournaments/:id/start', isAuthenticated, isClubAdmin, async (req, 
         const [tournament, registeredPlayers, availablePlayers, club, courts, matches] = await Promise.all([
             tournamentModel.getTournamentById(tournamentId),
             tournamentModel.getPlayersByTournament(tournamentId),
-            playerModel.getPlayersNotInTournament(tournamentId),
+            userModel.getUsersNotInTournament(tournamentId),
             clubModel.getClubById(clubId),
             courtModel.getCourtsByTournament(tournamentId),
             tournamentModel.getMatchesWithPlayersByTournament(tournamentId)
@@ -647,7 +654,7 @@ router.post('/matches/register_score', isAuthenticated, isClubAdmin, async (req,
             if (next_match) {
                 const rivals = await dbGet('SELECT * FROM match_players WHERE match_id = ?', [next_match.id]);
                 for (const player of winningPlayers) {
-                    await dbRun('INSERT INTO match_players (match_id, player_id, team, winner_from) VALUES (?, ?, ?, ?)', [next_match.id, player.player_id, getOppositeTeamSlot(rivals?.team), match.id]);
+                    await dbRun('INSERT INTO match_players (match_id, user_id, team, winner_from) VALUES (?, ?, ?, ?)', [next_match.id, player.user_id, getOppositeTeamSlot(rivals?.team), match.id]);
                 }
             }
         } 

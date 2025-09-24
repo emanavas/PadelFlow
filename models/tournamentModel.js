@@ -23,7 +23,49 @@ function _parseTournamentSettings(tournament) {
     return tournament;
 }
 
+function isPowerOfTwo(n) {
+    return n > 0 && (n & (n - 1)) === 0;
+}
+
 const tournamentModel = {
+    getAvailableTournamentsForPlayer: async function(userId) {
+        const sql = `
+            SELECT t.*,
+                   c.name as club_name,
+                   c.address as club_address,
+                   c.city as club_city,
+                   (SELECT COUNT(*) FROM tournament_players WHERE tournament_id = t.id) AS registered_players
+            FROM tournaments t
+            JOIN Clubs c ON t.club_id = c.id
+            WHERE t.id NOT IN (SELECT tp.tournament_id FROM tournament_players tp WHERE tp.user_id = ?)
+        `;
+        try {
+            let tournaments = await dbAll(sql, [userId]);
+            tournaments.forEach(tournament => {
+                tournament.available_slots = tournament.max_players - tournament.registered_players;
+            });
+            return tournaments.map(_parseTournamentSettings);
+        } catch (error) {
+            console.error("Error getting available tournaments for player:", error);
+            throw error;
+        }
+    },
+
+    getTournamentsByPlayer: async function(userId) {
+        const sql = `
+            SELECT t.*
+            FROM tournaments t
+            JOIN tournament_players tp ON t.id = tp.tournament_id
+            WHERE tp.user_id = ?
+        `;
+        try {
+            let tournaments = await dbAll(sql, [userId]);
+            return tournaments.map(_parseTournamentSettings);
+        } catch (error) {
+            console.error("Error getting tournaments by player:", error);
+            throw error;
+        }
+    },
 
     /**
      * Initializes an elimination-style tournament. It creates pairs, generates a bracket, 
@@ -39,30 +81,30 @@ const tournamentModel = {
             let tournament = await dbGet('SELECT * FROM tournaments WHERE id = ?', [tournamentId]);
             tournament = _parseTournamentSettings(tournament);
 
-            const players = await dbAll('SELECT p.id, p.ranking, tp.players_team_id FROM players p JOIN tournament_players tp ON p.id = tp.player_id WHERE tp.tournament_id = ?', [tournamentId]);
+            const users = await dbAll('SELECT u.id, u.ranking, tp.players_team_id FROM users u JOIN tournament_players tp ON u.id = tp.user_id WHERE tp.tournament_id = ?', [tournamentId]);
             const courts = await dbAll('SELECT c.id, c.name FROM courts c JOIN tournament_courts tc ON c.id = tc.court_id WHERE tc.tournament_id = ?', [tournamentId]);
 
             if (!tournament) throw new Error('Torneo no encontrado.');
             if (courts.length === 0) throw new Error('No hay pistas asignadas a este torneo.');
             
             const existingPairs = new Map();
-            const ungroupedPlayers = [];
-            players.forEach(p => {
+            const ungroupedUsers = [];
+            users.forEach(p => {
                 if (p.players_team_id) {
                     if (!existingPairs.has(p.players_team_id)) existingPairs.set(p.players_team_id, []);
                     existingPairs.get(p.players_team_id).push(p);
                 } else {
-                    ungroupedPlayers.push(p);
+                    ungroupedUsers.push(p);
                 }
             });
 
-            if (ungroupedPlayers.length % 2 !== 0) throw new Error('Hay un número impar de jugadores sin grupo.');
-            ungroupedPlayers.sort((a, b) => b.ranking - a.ranking);
+            if (ungroupedUsers.length % 2 !== 0) throw new Error('Hay un número impar de jugadores sin grupo.');
+            ungroupedUsers.sort((a, b) => b.ranking - a.ranking);
             const newPairs = [];
-            for (let i = 0; i < ungroupedPlayers.length; i += 2) {
-                const p1 = ungroupedPlayers[i], p2 = ungroupedPlayers[i+1];
+            for (let i = 0; i < ungroupedUsers.length; i += 2) {
+                const p1 = ungroupedUsers[i], p2 = ungroupedUsers[i+1];
                 const teamId = `${p1.id}-${p2.id}`;
-                await dbRun('UPDATE tournament_players SET players_team_id = ? WHERE tournament_id = ? AND player_id IN (?, ?)', [teamId, tournamentId, p1.id, p2.id]);
+                await dbRun('UPDATE tournament_players SET players_team_id = ? WHERE tournament_id = ? AND user_id IN (?, ?)', [teamId, tournamentId, p1.id, p2.id]);
                 newPairs.push([p1, p2]);
             }
 
@@ -113,8 +155,8 @@ const tournamentModel = {
                 const match = await dbGet('SELECT id FROM matches WHERE tournament_id = ? AND phase = ?', [tournamentId, phase]);
                 await dbRun('UPDATE matches SET court_id = ?, start_timestamp = ? WHERE id = ?', [assignedCourt.id, matchStartTime.toISOString(), match.id]);
 
-                for (const player of teamA) await dbRun('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)', [match.id, player.id, 'A']);
-                for (const player of teamB) await dbRun('INSERT INTO match_players (match_id, player_id, team) VALUES (?, ?, ?)', [match.id, player.id, 'B']);
+                for (const user of teamA) await dbRun('INSERT INTO match_players (match_id, user_id, team) VALUES (?, ?, ?)', [match.id, user.id, 'A']);
+                for (const user of teamB) await dbRun('INSERT INTO match_players (match_id, user_id, team) VALUES (?, ?, ?)', [match.id, user.id, 'B']);
 
                 const nextAvailableTime = new Date(matchStartTime.getTime() + (tournament.setting.match_duration || 90) * 60 * 1000);
                 courtAvailability.set(assignedCourt.id, nextAvailableTime);
@@ -200,12 +242,12 @@ const tournamentModel = {
                     teamA: [],
                     teamB: []
                 };
-                const players = await dbAll('SELECT p.*, mp.team FROM players p JOIN match_players mp ON p.id = mp.player_id WHERE mp.match_id = ?', [match.id]);
-                players.forEach(player => {
-                    if (player.team === 'A') {
-                        match.players.teamA.push(player);
-                    } else if (player.team === 'B') {
-                        match.players.teamB.push(player);
+                const users = await dbAll('SELECT u.*, mp.team FROM users u JOIN match_players mp ON u.id = mp.user_id WHERE mp.match_id = ?', [match.id]);
+                users.forEach(user => {
+                    if (user.team === 'A') {
+                        match.players.teamA.push(user);
+                    } else if (user.team === 'B') {
+                        match.players.teamB.push(user);
                     }
                 });
             }
@@ -265,11 +307,14 @@ const tournamentModel = {
      * @throws {Error} Throws an error if the database insert fails.
      */
     createTournament: async function(tournamentData) {
-        const { club_id, name, description, type, start_date, end_date, setting } = tournamentData;
+        const { club_id, name, description, type, start_date, end_date, max_players, setting } = tournamentData;
+        if (!isPowerOfTwo(max_players)) {
+            throw new Error('El número máximo de jugadores debe ser una potencia de 2 (2, 4, 8, 16, 32, 64, etc.).');
+        }
         const settingJSON = JSON.stringify(setting || { match_duration: 60 });
         try {
-            const result = await dbRun('INSERT INTO Tournaments (club_id, name, description, type, start_date, end_date, setting) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [club_id, name, description, type, start_date, end_date, settingJSON]);
+            const result = await dbRun('INSERT INTO Tournaments (club_id, name, description, type, start_date, end_date, max_players, setting) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [club_id, name, description, type, start_date, end_date, max_players, settingJSON]);
             return { id: result.lastID };
         } catch (error) {
             console.error("Error creating tournament:", error);
@@ -278,11 +323,14 @@ const tournamentModel = {
     },
 
     updateTournament: async function(id, tournamentData) {
-        const { name, description, type, start_date, end_date, setting } = tournamentData;
+        const { name, description, type, start_date, end_date, max_players, setting } = tournamentData;
+        if (max_players !== undefined && !isPowerOfTwo(max_players)) {
+            throw new Error('El número máximo de jugadores debe ser una potencia de 2 (2, 4, 8, 16, 32, 64, etc.).');
+        }
         const settingJSON = JSON.stringify(setting);
         try {
-            const result = await dbRun('UPDATE Tournaments SET name = ?, description = ?, type = ?, start_date = ?, end_date = ?, setting = ? WHERE id = ?', 
-                [name, description, type, start_date, end_date, settingJSON, id]);
+            const result = await dbRun('UPDATE Tournaments SET name = ?, description = ?, type = ?, start_date = ?, end_date = ?, max_players = ?, setting = ? WHERE id = ?', 
+                [name, description, type, start_date, end_date, max_players, settingJSON, id]);
             return { changes: result.changes };
         } catch (error) {
             console.error("Error updating tournament:", error);
@@ -300,10 +348,10 @@ const tournamentModel = {
         }
     },
 
-    addPlayerToTournament: async function(tournamentId, playerId) {
-        const sql = "INSERT INTO tournament_players (tournament_id, player_id) VALUES (?, ?)";
+    addPlayerToTournament: async function(tournamentId, userId) {
+        const sql = "INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)";
         try {
-            const result = await dbRun(sql, [tournamentId, playerId]);
+            const result = await dbRun(sql, [tournamentId, userId]);
             return { lastID: result.lastID };
         } catch (error) {
             console.error("Error adding player to tournament:", error);
@@ -311,12 +359,12 @@ const tournamentModel = {
         }
     },
 
-    addPlayerGroupToTournament: async function(tournamentId, playerIds, teamId) {
-        const sql = "INSERT INTO tournament_players (tournament_id, player_id, players_team_id) VALUES (?, ?, ?)";
+    addPlayerGroupToTournament: async function(tournamentId, userIds, teamId) {
+        const sql = "INSERT INTO tournament_players (tournament_id, user_id, players_team_id) VALUES (?, ?, ?)";
         try {
             await dbRun("BEGIN TRANSACTION;");
-            await dbRun(sql, [tournamentId, playerIds[0], teamId]);
-            await dbRun(sql, [tournamentId, playerIds[1], teamId]);
+            await dbRun(sql, [tournamentId, userIds[0], teamId]);
+            await dbRun(sql, [tournamentId, userIds[1], teamId]);
             await dbRun("COMMIT;");
             return { success: true };
         } catch (error) {
@@ -328,9 +376,9 @@ const tournamentModel = {
 
     getPlayersByTournament: async function(tournamentId) {
         const sql = `
-            SELECT p.*, tp.players_team_id
-            FROM players p
-            JOIN tournament_players tp ON p.id = tp.player_id
+            SELECT u.*, tp.players_team_id
+            FROM users u
+            JOIN tournament_players tp ON u.id = tp.user_id
             WHERE tp.tournament_id = ?
         `;
         try {
@@ -341,10 +389,10 @@ const tournamentModel = {
         }
     },
 
-    removePlayerFromTournament: async function(tournamentId, playerId) {
-        const sql = "DELETE FROM tournament_players WHERE tournament_id = ? AND player_id = ?";
+    removePlayerFromTournament: async function(tournamentId, userId) {
+        const sql = "DELETE FROM tournament_players WHERE tournament_id = ? AND user_id = ?";
         try {
-            const result = await dbRun(sql, [tournamentId, playerId]);
+            const result = await dbRun(sql, [tournamentId, userId]);
             return { changes: result.changes };
         } catch (error) {
             console.error("Error removing player from tournament:", error);

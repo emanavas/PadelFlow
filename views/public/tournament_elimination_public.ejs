@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Torneo: <%= viewModel.tournament.name %> — PadelFlow</title>
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+    <link rel="stylesheet" href="/assets/css/dashboard.css" />
+    <link rel="stylesheet" href="/swiper/swiper-bundle.min.css" />
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+        .connector {
+            background-color: #161212ff;
+            height: 2px;
+            /* width: 100%; */
+            position: absolute;
+            right: -30px;
+            z-index: -1;
+            transition: all 0.1s ease-out;
+        }
+        .vertical-line {
+            background-color: #161212ff;
+            width: 2px;
+            position: absolute;
+            right: -30px;
+            transition: all 0.1s ease-out;
+            z-index: -1;
+        }
+        .swiper-slide .round-header {
+            position: relative;
+            background: white;
+            border-bottom: 2px solid #e9ecef;
+            padding: 0.5rem 0;
+            margin: -0.5rem -1rem 1rem -1rem; /* Extiende a los bordes del slide */
+            z-index: 5;
+            text-align: center;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .swiper-slide .bracket-round {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        .card-highlight {
+            background: rgb(175, 238, 238);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container-fluid p-4">
+        <!-- Tournament Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2"></i>Resumen del Torneo</h5>
+            </div>
+            <div class="card-body">
+                <h1 class="h3"><%= viewModel.tournament.name %></h1>
+                <p><strong>Descripción:</strong> <%= viewModel.tournament.description || 'No hay descripción.' %></p>
+                <div class="row">
+                    <div class="col-md-3">
+                        <p><strong>Tipo:</strong> <span class="badge bg-secondary"><%= viewModel.tournament.type %></span></p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Duración de partidos:</strong> <%= viewModel.tournament.setting.match_duration %> min</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Inicio:</strong> <%= new Date(viewModel.tournament.start_date).toLocaleString('es-ES', { year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %></p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Fin:</strong> <%= new Date(viewModel.tournament.end_date).toLocaleString('es-ES', { year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament Viewer -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Bracket del Torneo</h5>
+                </div>
+            </div>
+            <div class="card-body container-fluid">
+
+                <div class="row row-cols-3">
+                    <div class="col-auto">
+                        <button type="button" id="swiper-button-prev" class="btn btn-sm btn-outline-secondary h-100">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                    <div class="d-flex flex-grow-1">
+                        <!-- Swiper -->
+                        <div class="swiper mySwiper px-1">
+                            <div class="swiper-wrapper">
+                                <%
+                                const mixedRoundsOrdered = locals?.viewModel?.bracketData?.mixedRoundsOrdered || [];
+                                %>
+
+                                <% if (mixedRoundsOrdered.length > 0) { %>
+                                    <% mixedRoundsOrdered.forEach(roundMatches => { %>
+                                        <% if (roundMatches.length > 0) { %>
+                                            <div class="swiper-slide d-flex flex-column h-100">
+                                                <%- roundMatches[0]?.phaseLabel || 'Ronda' %>
+                                                <div class="bracket-round flex-grow-1 d-flex flex-column justify-content-around gap-3">
+                                                    
+                                                    
+                                                        <% roundMatches.forEach(match => { %>
+                                                            <div class="card position-relative">
+                                                                <div class="card-body <%=match?.isUserMatch?'card-highlight':''%>">
+                                                                    <div class="text-muted text-center border-bottom mb-1 pb-1">
+                                                                        <small><i class="fas fa-clock me-1"></i> <%= match?.startTime || 'N/A' %></small>
+                                                                        <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i> <%= match?.courtName || 'N/A' %></small>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-around border-bottom mb-1 pb-1"><small>Team</small><small class="ms-2">Sets</small></div>
+                                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                        <small class="truncate-text"><strong>A</strong> <%= match?.players?.teamA.map(p => p.name).join('/') || 'Equipo A' %></small>
+                                                                        <div class="d-flex mx-1">
+                                                                            <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set1 || '-' %></span>
+                                                                            <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set2 || '-' %></span>
+                                                                            <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set3 || '-' %></span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <small class="truncate-text"><strong>B</strong> <%= match?.players?.teamB.map(p => p.name).join('/') || 'Equipo B' %></small>
+                                                                        <div class="d-flex mx-1">
+                                                                            <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set1 || '-' %></span>
+                                                                            <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set2 || '-' %></span>
+                                                                            <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set3 || '-' %></span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="connector"></div>
+                                                                <div class="vertical-line"></div>
+                                                            </div>
+                                                        <% }); %>
+                                                    
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                    <% }); %>
+                                <% } else { %>
+                                    <div class="swiper-slide">
+                                        <div class="alert alert-info">No hay datos del cuadro para mostrar.</div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" id="swiper-button-next" class="btn btn-sm btn-outline-secondary h-100">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                    
+                </div>
+                
+                
+            </div>
+        </div>
+    </main>
+    <script src="/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/swiper/swiper-bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        function getPosition( element ) {
+            var rect = element.getBoundingClientRect();
+            return {
+                x: rect.left,
+                y: rect.top
+            };
+        }
+
+        function getSize( element ) {
+            var rect = element.getBoundingClientRect();
+            return {
+                width: rect.width,
+                height: rect.height
+            };
+        }
+
+        function updateConnectors() {
+            setTimeout(() => {
+                    // get element inside slides and adjust height
+                const slideElements = document.querySelectorAll('.bracket-round');
+                // for each slide get the content
+                slideElements.forEach((slide, index) => {
+                    //console.log(`Slide ${index}: has this children:`, slide.children);
+                    // iterate children and get height and position
+                    let match1 = null;
+                    let match2 = null;
+                    // console.log(slide.children.length);
+
+                    for (let i = 0; i < slide.children.length; i++) {
+                        const content = slide.children[i];
+                        if (content) {
+                            var pos = getPosition( content );
+                            var size = getSize( content );
+
+                            // Alert position in X axis
+                            // console.log( `posx: ${pos.x} posy: ${pos.y}` );
+                            // create connector lines
+
+                            const connector = content.querySelector('.connector');
+                            connector.style.top = `${size.height/2}px`;
+                            connector.style.width = `${size.width}px`;
+                            if (i % 2 === 0 ) {
+                                match1 = {
+                                    x: pos.x,
+                                    y: pos.y,
+                                    width: size.width,
+                                    height: size.height
+                                };
+                                //pos,size;
+                            } else {
+                                match2 = {
+                                    x: pos.x,
+                                    y: pos.y,
+                                    width: size.width,
+                                    height: size.height
+                                };
+                                // draw vertical line between match1 and match2
+                                const verticalLine = content.querySelector('.vertical-line');
+                                verticalLine.style.height = `${match2.y - match1.y}px`;
+                                verticalLine.style.bottom = `${(match1.height/2)-4}px` ;
+                                // reset match1 and match2
+                                match1 = null;
+                                match2 = null;
+                            }
+
+                        }
+                    };
+                });
+            }, 150);
+            
+        }
+
+
+        var swiper = new Swiper('.mySwiper', {
+            slidesPerView: 3,
+            spaceBetween: 60,
+            navigation: {
+                nextEl: '#swiper-button-next',
+                prevEl: '#swiper-button-prev',
+            },
+            breakpoints: {
+                120: {
+                    slidesPerView: 1,
+                },
+                768: {
+                    slidesPerView: 2,
+                },
+                1440: {
+                    slidesPerView: 3,
+                },
+            },
+            // Optional: Enable loop mode
+            loop: false,
+            // modify height based on content
+            autoHeight: true,
+            on: {
+                init: function() {
+                    updateConnectors();
+                },
+                beforeTransitionStart: function() {
+                    // make all connectors invisible before transition starts
+                    const connectors = document.querySelectorAll('.connector, .vertical-line');
+                    connectors.forEach(connector => {
+                        connector.style.opacity = '0';
+                    });
+                },
+                transitionEnd: function() {
+                    setTimeout(() => {
+                        // make all connectors visible after transition ends
+                        const connectors = document.querySelectorAll('.connector, .vertical-line');
+                        connectors.forEach(connector => {
+                            connector.style.opacity = '1';
+                        });
+                    }, 300);
+                    
+                },
+                slideNextTransitionEnd: function() {
+                    // update height of next slides
+                    for(let i = this.activeIndex ; i < this.slides.length; i++) {
+                        // remove h-100 class
+                        this.slides[i].classList.remove('h-100');
+                    }
+                    this.updateAutoHeight();
+                    // delay 100ms to allow height transition
+                    setTimeout(() => {
+                        for(let i = this.activeIndex ; i < this.slides.length; i++) {
+                            this.slides[i].classList.add('h-100');
+                        }
+                        updateConnectors();
+                    }, 50);
+                    
+                },
+                slidePrevTransitionEnd: function() {            
+                    // restore height of all slides
+                    for(let i = 0; i < this.slides.length; i++) {
+                        this.slides[i].classList.remove('h-100');
+                    }
+                    this.updateAutoHeight();
+                    // delay 100ms to allow height transition
+                    setTimeout(() => {
+                        for(let i = 0; i < this.slides.length; i++) {
+                            this.slides[i].classList.add('h-100');
+                        }
+                        updateConnectors();
+                    }, 50);
+                },
+                resize: function() {
+                    // restore height of all slides
+                    for(let i = 0; i < this.slides.length; i++) {
+                        this.slides[i].classList.remove('h-100');
+                    }
+                    this.updateAutoHeight();
+                    // delay 100ms to allow height transition
+                    setTimeout(() => {
+                        for(let i = 0; i < this.slides.length; i++) {
+                            this.slides[i].classList.add('h-100');
+                        }
+                        updateConnectors();
+                    }, 50);
+                },
+            },
+            
+        });
+    });
+    </script>
+</body>
+
+</html>

@@ -15,6 +15,8 @@ const adminRouter = require('./routes/adminRoutes')
 const tournamentRouter = require('./routes/tournamentRoutes');
 const apiRouter = require('./routes/apiRoutes');
 const clubRouter = require('./routes/clubRoutes');
+const playerRouter = require('./routes/playerRoutes');
+
 
 i18next
     .use(Backend)
@@ -85,6 +87,7 @@ app.use('/admin', adminRouter);
 app.use('/club', clubRouter);
 app.use('/tournaments', tournamentRouter);
 app.use('/api', apiRouter);
+app.use('/player', playerRouter);
 
 // Definir puerto y arrancar servidor
 const PORT = process.env.PORT || 3000;

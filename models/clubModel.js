@@ -33,6 +33,15 @@ const clubModel = {
         return dbAll(sql);
     },
 
+    async getCourtsByClubId(clubId) {
+        try {
+            return await dbAll('SELECT * FROM Courts WHERE club_id = ?', [clubId]);
+        } catch (error) {
+            console.error("Error getting courts by club id:", error);
+            throw error;
+        }
+    },
+
     async getAllClubs() {
         return dbAll('SELECT * FROM Clubs');
     },

@@ -4,9 +4,9 @@ function getPhaseLabel(phase, t) {
     if (!phase) return '-';
 
     if (phase === 'F')
-        return '<h3 class="badge bg-success">' + t('round_final') + '</h3>';
+        return '<h3 class="badge bg-success mb-3">' + t('round_final') + '</h3>';
     if (phase === 'A' || phase === 'B')
-        return '<h3 class="badge bg-primary">' + t('round_semifinal') + '</h3>';
+        return '<h3 class="badge bg-primary mb-3">' + t('round_semifinal') + '</h3>';
 
     var match = phase.match(/^([AB])-([0-9]+)(?:-([0-9]+))?(?:-([0-9]+))?(?:-([0-9]+))?(?:-([0-9]+))?$/);
     if (match) {
@@ -26,9 +26,9 @@ function getPhaseLabel(phase, t) {
         else
             label = phase;
 
-        return '<span class="badge bg-info">' + label + '</span>';
+        return '<span class="badge bg-info mb-3">' + label + '</span>';
     }
-    return '<span class="badge bg-secondary">' + phase + '</span>';
+    return '<span class="badge bg-secondary mb-3">' + phase + '</span>';
 }
 
 
@@ -39,7 +39,7 @@ function getWinnerPlayersFromMatch(match) {
     return match.team_winner === 'A' ? match.players.teamA : match.players.teamB;
 }
 
-function formatMatchesForBracket(matches, t) {
+function formatMatchesForBracket(matches, t, userId) {
     if (!matches || matches.length === 0) {
         return {};
     }
@@ -123,11 +123,15 @@ function formatMatchesForBracket(matches, t) {
 
 
 module.exports = {
-    presentTournament:  function (tournament, matches, registeredPlayers, courts, t) {
+    presentTournament:  function (tournament, matches, registeredPlayers, courts, t, userId) {
         // If t is not provided, use a dummy function that returns the key
         t = t || function(key) { return key; };
 
-        var courtMap = new Map(courts.map(function(c) { return [c.id, c.name]; }));
+        // Create courtMap from courts array
+        const courtMap = new Map();
+        courts.forEach(court => {
+            courtMap.set(court.id, court.name);
+        });
 
         matches.forEach(function(match) {
             if (match.court_id) {
@@ -137,6 +141,14 @@ module.exports = {
                 match.startTime = new Date(match.start_timestamp).toLocaleString('default', {
                                                         month: 'short' , day: 'numeric' , hour: '2-digit' ,
                                                         minute: '2-digit' })
+            }
+            // Check if the current user is in this match
+            const teamAPlayerIds = match.players?.teamA?.map(p => p.id) || [];
+            const teamBPlayerIds = match.players?.teamB?.map(p => p.id) || [];
+            if (userId && (teamAPlayerIds.includes(userId) || teamBPlayerIds.includes(userId))) {
+                match.isUserMatch = true;
+            } else {
+                match.isUserMatch = false;
             }
         });
 
@@ -154,7 +166,7 @@ module.exports = {
         };
 
         if (viewModel.view.isElimination) {
-            viewModel.bracketData = formatMatchesForBracket(matches, t);
+            viewModel.bracketData = formatMatchesForBracket(matches, t, userId);
             
             if (viewModel.bracketData && viewModel.bracketData.roundsA) {
                 viewModel.roundsA = Object.keys(viewModel.bracketData.roundsA);
@@ -176,5 +188,72 @@ module.exports = {
         }
 
         return viewModel;
+    },
+
+    presentWallshowData: function (tournament, matches, courts, t) {
+        t = t || function(key) { return key; };
+
+        const courtMap = new Map();
+        courts.forEach(court => {
+            courtMap.set(court.id, { ...court, currentMatch: null, upcomingMatches: [] });
+        });
+
+        const now = new Date();
+
+        // First, assign courtName and startTime to all matches
+        matches.forEach(match => {
+            if (match.court_id) {
+                match.courtName = courtMap.get(match.court_id)?.name || 'Pista no encontrada';
+            }
+            if (match.start_timestamp) {
+                match.startTime = new Date(match.start_timestamp).toLocaleString('default', {
+                                                        month: 'short' , day: 'numeric' , hour: '2-digit' ,
+                                                        minute: '2-digit' });
+                match.startDateTime = new Date(match.start_timestamp); // For sorting
+            }
+        });
+
+        // Sort matches by start time
+        matches.sort((a, b) => a.startDateTime - b.startDateTime);
+
+        // Assign matches to courts
+        matches.forEach(match => {
+            const courtData = courtMap.get(match.court_id);
+            if (courtData) {
+                if (!match.score && match.startDateTime <= now && !courtData.currentMatch) {
+                    // Match is ongoing and no current match assigned to this court yet
+                    courtData.currentMatch = match;
+                } else if (!match.score && match.startDateTime > now) {
+                    // Match is upcoming
+                    courtData.upcomingMatches.push(match);
+                }
+                // If match has score, it's already finished, so we don't display it as current or upcoming
+            } else {
+                console.warn(`Court data not found for match ${match.id} with court_id ${match.court_id}`);
+            }
+        });
+
+        // Determine the "current round in play"
+        let currentRoundInPlay = 'No hay ronda en juego';
+        const pendingMatches = matches.filter(match => !match.score);
+        if (pendingMatches.length > 0) {
+            // Find the earliest phase among pending matches
+            const earliestPhaseMatch = pendingMatches.reduce((prev, current) => {
+                if (!prev.phase) return current;
+                // Assuming phase 'F' < 'A'/'B' < 'A-1'/'B-1' etc.
+                // This needs a more robust phase comparison if phases are not simple strings
+                return prev.phase.localeCompare(current.phase) > 0 ? current : prev;
+            }, {});
+            if (earliestPhaseMatch.phase) {
+                currentRoundInPlay = getPhaseLabel(earliestPhaseMatch.phase, t);
+            }
+        }
+
+
+        return {
+            tournament: tournament,
+            courtsData: Array.from(courtMap.values()),
+            currentRoundInPlay: currentRoundInPlay
+        };
     }
 };

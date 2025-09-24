@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Player Dashboard — PádelManager</title>
+  <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/player_dashboard.css" />
+</head>
+
+<body>
+  <!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Player Dashboard — PádelManager</title>
+  <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/player_dashboard.css" />
+</head>
+
+<body>
+  <!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Player Dashboard — PádelManager</title>
+  <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/player_dashboard.css" />
+</head>
+
+<body>
+  <!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Player Dashboard — PádelManager</title>
+  <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/player_dashboard.css" />
+</head>
+
+<body>
+  <%- include('partials/player_header') %>
+    <div class="player-shell d-flex">
+      <!-- Sidebar -->
+      <%- include('partials/player_sidebar') %>
+
+        <!-- Main -->
+        <div class="flex-grow-1 p-4" style="background-color: #f0f2f5;">
+          <!-- Content -->
+          <main class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0 text-dark">Hola, <%= user.name %>!</h1>
+            </div>
+
+            <!-- Personal Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white" style="background: linear-gradient(45deg, #3a7bd5, #3a6073);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Partidos Jugados</h5>
+                                    <p class="card-text fs-4"><%= stats.partidosJugados %></p>
+                                </div>
+                                <i class="fas fa-table-tennis fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white" style="background: linear-gradient(45deg, #6a11cb, #2575fc);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Victorias</h5>
+                                    <p class="card-text fs-4"><%= stats.victorias %></p>
+                                </div>
+                                <i class="fas fa-trophy fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white" style="background: linear-gradient(45deg, #f7971e, #ffd200);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Efectividad</h5>
+                                    <p class="card-text fs-4"><%= stats.efectividad %></p>
+                                </div>
+                                <i class="fas fa-bullseye fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white" style="background: linear-gradient(45deg, #e52d27, #b31217);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Próximo Partido</h5>
+                                    <p class="card-text fs-4"><%= stats.proximoPartido %></p>
+                                </div>
+                                <i class="fas fa-calendar-alt fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Invitations -->
+            <% if (pendingInvitations && pendingInvitations.length > 0) { %>
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-bell me-2"></i>Invitaciones Pendientes</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <% pendingInvitations.forEach(invitation => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    Invitación de <strong><%= invitation.inviting_user_name %></strong> para el torneo <strong><%= invitation.tournament_name %></strong>
+                                </div>
+                                <div>
+                                    <form action="/player/invitations/<%= invitation.id %>/accept" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-success btn-sm me-2">Aceptar</button>
+                                    </form>
+                                    <form action="/player/invitations/<%= invitation.id %>/decline" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">Rechazar</button>
+                                    </form>
+                                </div>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+            <% } %>
+
+            <!-- Available Competitions -->
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">Competiciones Disponibles</h4>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Buscar torneo por nombre o club...">
+                        <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <% availableTournaments.forEach(t => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1"><%= t.name %></h5>
+                                    <small class="text-muted"><%= t.club_name %> | Fecha límite: <%= new Date(t.end_date).toLocaleDateString() %> | Plazas disponibles: <%= t.available_slots %></small>
+                                </div>
+                                <button class="btn btn-success enroll-btn" data-tournament-id="<%= t.id %>" data-tournament-name="<%= t.name %>">Inscribirse</button>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- My Competitions -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Mis Competiciones</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <% myTournaments.forEach(t => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1"><%= t.name %></h5>
+                                    <p class="mb-1"><strong>Posición:</strong> <%= t.position %></p>
+                                    <small class="text-muted">Próximo partido: <%= t.nextMatch %></small>
+                                </div>
+                                <a href="/player/tournaments/<%= t.id %>" class="btn btn-info">Ver Torneo</a>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+          </main>
+        </div>
+    </div>
+
+    <!-- Enrollment Modal -->
+    <div class="modal fade" id="enrollmentModal" tabindex="-1" aria-labelledby="enrollmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="enrollmentModalLabel">Inscribirse en <span id="modalTournamentName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Cómo quieres inscribirte?</p>
+                    <div class="d-grid gap-2 mb-3">
+                        <button class="btn btn-primary" id="enrollAloneBtn">Inscribirse Solo</button>
+                        <button class="btn btn-secondary" id="enrollWithPartnerBtn">Inscribirse con Compañero</button>
+                    </div>
+
+                    <div id="partnerEnrollmentForm" style="display: none;">
+                        <h6>Invitar a un compañero:</h6>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="playerSearchInput" placeholder="Buscar compañero por nombre o email...">
+                            <div id="playerSearchResults" class="list-group mt-2"></div>
+                        </div>
+                        <button class="btn btn-success" id="sendInvitationBtn" disabled>Enviar Invitación</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const enrollmentModal = new bootstrap.Modal(document.getElementById('enrollmentModal'));
+            const modalTournamentName = document.getElementById('modalTournamentName');
+            const enrollAloneBtn = document.getElementById('enrollAloneBtn');
+            const enrollWithPartnerBtn = document.getElementById('enrollWithPartnerBtn');
+            const partnerEnrollmentForm = document.getElementById('partnerEnrollmentForm');
+            const playerSearchInput = document.getElementById('playerSearchInput');
+            const playerSearchResults = document.getElementById('playerSearchResults');
+            const sendInvitationBtn = document.getElementById('sendInvitationBtn');
+
+            let selectedTournamentId = null;
+            let selectedPartnerId = null;
+
+            document.querySelectorAll('.enroll-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    selectedTournamentId = this.dataset.tournamentId;
+                    modalTournamentName.textContent = this.dataset.tournamentName;
+                    partnerEnrollmentForm.style.display = 'none'; // Hide partner form by default
+                    enrollmentModal.show();
+                });
+            });
+
+            enrollAloneBtn.addEventListener('click', async function() {
+                if (selectedTournamentId) {
+                    const response = await fetch(`/player/tournaments/${selectedTournamentId}/enroll-alone`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Inscripción individual exitosa!');
+                        window.location.reload(); // Reload to update tournament lists
+                    } else {
+                        alert(`Error al inscribirse: ${result.message}`);
+                    }
+                    enrollmentModal.hide();
+                } else {
+                    alert('Por favor, selecciona un torneo.');
+                }
+            });
+
+            enrollWithPartnerBtn.addEventListener('click', function() {
+                partnerEnrollmentForm.style.display = 'block';
+                playerSearchInput.value = '';
+                playerSearchResults.innerHTML = '';
+                sendInvitationBtn.disabled = true;
+                selectedPartnerId = null;
+            });
+
+            playerSearchInput.addEventListener('input', async function() {
+                const query = this.value;
+                if (query.length < 3) {
+                    playerSearchResults.innerHTML = '';
+                    sendInvitationBtn.disabled = true;
+                    selectedPartnerId = null;
+                    return;
+                }
+
+                const response = await fetch(`/api/players/search?q=${query}`);
+                const players = await response.json();
+
+                playerSearchResults.innerHTML = '';
+                if (players.length > 0) {
+                    players.forEach(player => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.classList.add('list-group-item', 'list-group-item-action');
+                        item.textContent = `${player.name} (${player.email})`;
+                        item.dataset.playerId = player.id;
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            playerSearchInput.value = player.name; // Display selected player's name
+                            selectedPartnerId = this.dataset.playerId;
+                            sendInvitationBtn.disabled = false;
+                            playerSearchResults.innerHTML = ''; // Clear results after selection
+                        });
+                        playerSearchResults.appendChild(item);
+                    });
+                } else {
+                    playerSearchResults.innerHTML = '<div class="list-group-item">No se encontraron jugadores.</div>';
+                }
+            });
+
+            sendInvitationBtn.addEventListener('click', async function() {
+                if (selectedTournamentId && selectedPartnerId) {
+                    console.log(`Sending invitation for tournament ${selectedTournamentId} to player ${selectedPartnerId}`);
+                    const response = await fetch(`/player/tournaments/${selectedTournamentId}/invite`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ invitedUserId: selectedPartnerId })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Invitación enviada con éxito!');
+                    } else {
+                        if(result.message){
+                            alert(result.message);
+                        }else{
+                            alert('Error al enviar la invitación.');
+                        }
+                    }
+                    enrollmentModal.hide();
+                } else {
+                    alert('Por favor, selecciona un torneo y un compañero.');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

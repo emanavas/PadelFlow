@@ -36,7 +36,7 @@
                     <div class="d-flex justify-content-between">
                       <div>
                         <small class="text-muted">Eventos activos</small>
-                        <h4 id="statEvents">0</h4>
+                        <h4 id="statEvents"><%= locals.tournaments ? tournaments.length : 0 %></h4>
                       </div>
                       <div class="icon text-white d-flex align-items-center justify-content-center">
                         <i class="fas fa-calendar-check fa-2xl"></i>
@@ -166,6 +166,51 @@
                 </div>
               </div>
 
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <i class="fas fa-trophy me-2"></i>
+                    Torneos
+                  </div>
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% if (locals.tournaments && tournaments.length > 0) { %>
+                            <% tournaments.forEach(tournament => { %>
+                              <tr>
+                                <td><%= tournament.name %></td>
+                                <td><%= tournament.type %></td>
+                                <td><%= new Date(tournament.start_date).toLocaleDateString() %></td>
+                                <td><%= new Date(tournament.end_date).toLocaleDateString() %></td>
+                                <td><span class="badge bg-success"><%= tournament.status %></span></td>
+                                <td>
+                                  <a href="/admin/tournaments/manage/<%= tournament.id %>" class="btn btn-sm btn-primary">Gestionar</a>
+                                </td>
+                              </tr>
+                            <% }); %>
+                          <% } else { %>
+                            <tr>
+                              <td colspan="6" class="text-center">No hay torneos para mostrar.</td>
+                            </tr>
+                          <% } %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
 
@@ -233,7 +278,7 @@
       </div>
     </div>
 
-    <script src="/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="/assets/js/dashboard.js"></script>
 </body>

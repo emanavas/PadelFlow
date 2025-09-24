@@ -2,7 +2,7 @@
     <div class="container-fluid d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-light d-lg-none" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-light d-xxl-none" id="toggleSidebar"><i class="fas fa-bars"></i></button>
             <a href="/" class="d-flex align-items-center mb-3 text-decoration-none">
                 <i class="fas fa-palette fa-2x text-primary me-2"></i>
                 <div>
@@ -70,6 +70,23 @@ document.addEventListener('DOMContentLoaded', function () {
             adminShell.classList.remove('sidebar-toggled');
         });
     }
+
+    // Hide header on scroll down, show on scroll up
+    let lastScrollTop = 0;
+    const header = document.querySelector('.topbar');
+    header.style.transition = 'top 0.3s ease-in-out';
+
+    window.addEventListener('scroll', function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > lastScrollTop) {
+            // Downscroll
+            header.style.top = '-100px'; // Adjust this value to hide the header completely
+        } else {
+            // Upscroll
+            header.style.top = '0';
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
+    });
 });
 
 </script>
