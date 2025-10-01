@@ -6,8 +6,8 @@
             <a href="/player/dashboard" class="d-flex align-items-center mb-3 text-decoration-none">
                 <i class="fas fa-user-ninja fa-2x text-info me-2"></i>
                 <div>
-                    <strong>PádelManager</strong><br />
-                    <small class="text-muted">Panel del Jugador</small>
+                    <strong><%= t('player.header.brand') %></strong><br />
+                    <small class="text-muted"><%= t('player.header.player_panel') %></small>
                 </div>
             </a>
         </div>
@@ -21,18 +21,18 @@
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="text-end d-none d-sm-block">
-                        <div id="userName"><strong><%= user?.username || 'Jugador' %></strong></div>
+                        <div id="userName"><strong><%= user?.username || t('player.header.default_player_name') %></strong></div>
                         <small class="text-muted" id="userEmail"><%= user?.email || 'player@example.com' %></small>
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="/player/profile"><i class="fas fa-user-circle me-2"></i> Mi Perfil</a></li>
-                    <li><a class="dropdown-item" href="/player/my-tournaments"><i class="fas fa-trophy me-2"></i> Mis Torneos</a></li>
+                    <li><a class="dropdown-item" href="/player/profile"><i class="fas fa-user-circle me-2"></i> <%= t('player.header.menu.my_profile') %></a></li>
+                    <li><a class="dropdown-item" href="/player/my-tournaments"><i class="fas fa-trophy me-2"></i> <%= t('player.header.menu.my_tournaments') %></a></li>
                     <li>
                         <hr class="dropdown-divider" />
                     </li>
                     <li><a class="dropdown-item text-danger" href="/logout" id="signOutBtn"><i
-                                class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+                                class="fas fa-sign-out-alt me-2"></i> <%= t('player.header.menu.logout') %></a></li>
                 </ul>
             </div>
         </div>

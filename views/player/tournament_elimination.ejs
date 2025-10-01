@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<%= currentLanguage %>">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Torneo: <%= viewModel.tournament.name %> — PadelFlow</title>
+    <title><%= t('player.tournament_elimination.title', { tournamentName: viewModel.tournament.name }) %></title>
     <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="/assets/css/styles.css" />
@@ -59,23 +59,23 @@
                 <!-- Tournament Details -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-info-circle me-2"></i>Resumen del Torneo</h5>
+                        <h5><i class="fas fa-info-circle me-2"></i><%= t('player.tournament_elimination.summary.title') %></h5>
                     </div>
                     <div class="card-body">
                         <h1 class="h3"><%= viewModel.tournament.name %></h1>
-                        <p><strong>Descripción:</strong> <%= viewModel.tournament.description || 'No hay descripción.' %></p>
+                        <p><strong><%= t('player.tournament_elimination.summary.description') %>:</strong> <%= viewModel.tournament.description || t('player.tournament_elimination.summary.no_description') %></p>
                         <div class="row">
                             <div class="col-md-3">
-                                <p><strong>Tipo:</strong> <span class="badge bg-secondary"><%= viewModel.tournament.type %></span></p>
+                                <p><strong><%= t('player.tournament_elimination.summary.type') %>:</strong> <span class="badge bg-secondary"><%= viewModel.tournament.type %></span></p>
                             </div>
                             <div class="col-md-3">
-                                <p><strong>Duración de partidos:</strong> <%= viewModel.tournament.setting.match_duration %> min</p>
+                                <p><strong><%= t('player.tournament_elimination.summary.match_duration') %>:</strong> <%= viewModel.tournament.setting.match_duration %> min</p>
                             </div>
                             <div class="col-md-3">
-                                <p><strong>Inicio:</strong> <%= new Date(viewModel.tournament.start_date).toLocaleString('es-ES', { year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %></p>
+                                <p><strong><%= t('player.tournament_elimination.summary.start') %>:</strong> <%= new Date(viewModel.tournament.start_date).toLocaleString(currentLanguage, { year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %></p>
                             </div>
                             <div class="col-md-3">
-                                <p><strong>Fin:</strong> <%= new Date(viewModel.tournament.end_date).toLocaleString('es-ES', { year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %></p>
+                                <p><strong><%= t('player.tournament_elimination.summary.end') %>:</strong> <%= new Date(viewModel.tournament.end_date).toLocaleString(currentLanguage, { year: 'numeric' , month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute: '2-digit' }) %></p>
                             </div>
                         </div>
                     </div>
@@ -84,7 +84,7 @@
                 <!-- My Matches -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-volleyball-ball me-2"></i>Mis Próximos Partidos</h5>
+                        <h5><i class="fas fa-volleyball-ball me-2"></i><%= t('player.tournament_elimination.my_matches.title') %></h5>
                     </div>
                     <div class="card-body">
                         <% if (myMatches && myMatches.length > 0) { %>
@@ -93,20 +93,20 @@
                                     <li class="list-group-item">
                                         <div class="d-flex justify-content-between">
                                             <div>
-                                                <strong><%= match.team_a_players %> vs <%= match.team_b_players %></strong>
+                                                <strong><%= match.team_a_players %> <%= t('player.tournament_elimination.my_matches.vs') %> <%= match.team_b_players %></strong>
                                             </div>
                                             <div>
                                                 <small><%= new Date(match.start_timestamp).toLocaleString() %></small>
                                             </div>
                                         </div>
                                         <div>
-                                            Pista: <%= match.court_name %>
+                                            <%= t('player.tournament_elimination.my_matches.court') %>: <%= match.court_name %>
                                         </div>
                                     </li>
                                 <% }); %>
                             </ul>
                         <% } else { %>
-                            <p class="text-muted">No tienes partidos programados en este torneo.</p>
+                            <p class="text-muted"><%= t('player.tournament_elimination.my_matches.no_matches') %></p>
                         <% } %>
                     </div>
                 </div>
@@ -115,7 +115,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Bracket del Torneo</h5>
+                            <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i><%= t('player.tournament_elimination.bracket.title') %></h5>
                         </div>
                     </div>
                     <div class="card-body container-fluid">
@@ -138,7 +138,7 @@
                                             <% mixedRoundsOrdered.forEach(roundMatches => { %>
                                                 <% if (roundMatches.length > 0) { %>
                                                     <div class="swiper-slide d-flex flex-column h-100">
-                                                        <%- roundMatches[0]?.phaseLabel || 'Ronda' %>
+                                                        <%- roundMatches[0]?.phaseLabel || t('player.tournament_elimination.bracket.round') %>
                                                         <div class="bracket-round flex-grow-1 d-flex flex-column justify-content-around gap-3">
                                                             
                                                             
@@ -149,9 +149,9 @@
                                                                                 <small><i class="fas fa-clock me-1"></i> <%= match?.startTime || 'N/A' %></small>
                                                                                 <small class="ms-2"><i class="fas fa-map-marker-alt me-1"></i> <%= match?.courtName || 'N/A' %></small>
                                                                             </div>
-                                                                            <div class="d-flex justify-content-around border-bottom mb-1 pb-1"><small>Team</small><small class="ms-2">Sets</small></div>
+                                                                            <div class="d-flex justify-content-around border-bottom mb-1 pb-1"><small><%= t('player.tournament_elimination.bracket.team') %></small><small class="ms-2"><%= t('player.tournament_elimination.bracket.sets') %></small></div>
                                                                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                                                                <small class="truncate-text"><strong>A</strong> <%= match?.players?.teamA.map(p => p.name).join('/') || 'Equipo A' %></small>
+                                                                                <small class="truncate-text"><strong>A</strong> <%= match?.players?.teamA.map(p => p.name).join('/') || t('player.tournament_elimination.bracket.team_a') %></small>
                                                                                 <div class="d-flex mx-1">
                                                                                     <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set1 || '-' %></span>
                                                                                     <span class="badge bg-light text-dark ml-1"><%= match?.score_teamA_set2 || '-' %></span>
@@ -159,7 +159,7 @@
                                                                                 </div>
                                                                             </div>
                                                                             <div class="d-flex justify-content-between align-items-center">
-                                                                                <small class="truncate-text"><strong>B</strong> <%= match?.players?.teamB.map(p => p.name).join('/') || 'Equipo B' %></small>
+                                                                                <small class="truncate-text"><strong>B</strong> <%= match?.players?.teamB.map(p => p.name).join('/') || t('player.tournament_elimination.bracket.team_b') %></small>
                                                                                 <div class="d-flex mx-1">
                                                                                     <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set1 || '-' %></span>
                                                                                     <span class="badge bg-light text-dark ml-1"><%= match?.score_teamB_set2 || '-' %></span>
@@ -178,7 +178,7 @@
                                             <% }); %>
                                         <% } else { %>
                                             <div class="swiper-slide">
-                                                <div class="alert alert-info">No hay datos del cuadro para mostrar.</div>
+                                                <div class="alert alert-info"><%= t('player.tournament_elimination.bracket.no_data') %></div>
                                             </div>
                                         <% } %>
                                     </div>

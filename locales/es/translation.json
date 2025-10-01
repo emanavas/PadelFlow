@@ -18,5 +18,220 @@
   "round_of_64": "32avos de Final",
   "round_of_128": "64avos de Final",
   "side_right": "derecha",
-  "side_left": "izquierda"
+  "side_left": "izquierda",
+  "main": {
+    "title": "Pádel Torneos — Gestión, Inscripciones y Resultados",
+    "navbar": {
+      "brand": "PádelManager"
+    },
+    "hero": {
+      "title": "Gestiona torneos de pádel fácilmente",
+      "subtitle": "Round Robin, Eliminación directa, Ligas y todas las variantes de la Americana. Inscripciones, pagos, emparejamiento automático y resultados en tiempo real.",
+      "button": {
+        "plans": "Ver Planes",
+        "features": "Ver Características"
+      },
+      "feature1": "Emparejamiento automático",
+      "feature2": "Pagos integrados",
+      "feature3": "Wallshow público para espectadores"
+    },
+    "features": {
+      "title": "Características principales",
+      "card1": {
+        "title": "Modos de torneo",
+        "text": "Round Robin (Todos contra Todos), Eliminación Directa, Ligas, Americanas (Clásica, con Rotación, Canaria)."
+      },
+      "card2": {
+        "title": "Gestión de inscripciones",
+        "text": "Inscripciones online, gestión de plazas, listas de espera y pagos seguros con integración de pasarela."
+      },
+      "card3": {
+        "title": "Emparejamiento automático",
+        "text": "Algoritmos para emparejar por nivel, rotación o parejas fijas. Configura reglas y deja que el sistema genere los cuadros."
+      },
+      "card4": {
+        "title": "Resultados en tiempo real",
+        "text": "Actualizaciones instantáneas en Wallshow público y panel de control. Ideal para espectadores y jugadores."
+      },
+      "card5": {
+        "title": "Panel de administrador",
+        "text": "Herramientas para administradores de club: crear eventos, gestionar inscripciones, generar cuadros y editar resultados."
+      },
+      "card6": {
+        "title": "Wallshow público",
+        "text": "Pantalla pública para mostrar el estado de partidos, resultados, podio y estadísticas en tiempo real."
+      }
+    },
+    "plans": {
+      "title": "Planes",
+      "card1": {
+        "title": "Starter",
+        "price": "Gratis",
+        "text": "Ideal para clubs que quieren probar la plataforma. Eventos limitados y funciones básicas.",
+        "feature1": "Inscripciones básicas",
+        "feature2": "Wallshow",
+        "button": "Empezar Gratis"
+      },
+      "card2": {
+        "title": "Pro",
+        "price": "€49 / mes",
+        "text": "Funciones completas para gestionar múltiples torneos y pagos integrados.",
+        "feature1": "Emparejamiento automático",
+        "feature2": "Pagos integrados",
+        "feature3": "Soporte prioritario",
+        "button": "Contratar Pro"
+      },
+      "card3": {
+        "title": "Enterprise",
+        "price": "A consultar",
+        "text": "Soluciones a medida para federaciones y grandes organizadores.",
+        "feature1": "Integraciones personalizadas",
+        "feature2": "Desarrollo a medida",
+        "button": "Solicitar demo"
+      }
+    },
+    "contact": {
+      "title": "Contacto y demo",
+      "form": {
+        "name": "Nombre",
+        "name.feedback": "Ingrese su nombre.",
+        "company": "Club o Empresa",
+        "email": "Email",
+        "email.feedback": "Ingrese un email válido.",
+        "message": "Mensaje",
+        "button": "Solicitar demo"
+      },
+      "support": {
+        "title": "Soporte",
+        "text": "Si necesitas una integración específica o una demo personalizada, escríbenos y te contactaremos para agendar una llamada."
+      }
+    },
+    "footer": {
+      "brand": "PádelManager"
+    },
+    "lang": {
+      "en": "English",
+      "es": "Español",
+      "ca": "Català"
+    }
+  },
+  "player": {
+    "dashboard": {
+      "title": "Dashboard del Jugador — PádelManager",
+      "welcome": "¡Hola, {{name}}!",
+      "stats": {
+        "matches_played": "Partidos Jugados",
+        "wins": "Victorias",
+        "effectiveness": "Efectividad",
+        "next_match": "Próximo Partido"
+      },
+      "invitations": {
+        "title": "Invitaciones Pendientes",
+        "invitation_text": "Invitación de <strong>{{inviting_user_name}}</strong> para el torneo <strong>{{tournament_name}}</strong>",
+        "accept": "Aceptar",
+        "decline": "Rechazar"
+      },
+      "available_tournaments": {
+        "title": "Competiciones Disponibles",
+        "search_placeholder": "Buscar torneo por nombre o club...",
+        "deadline": "Fecha límite",
+        "available_slots": "Plazas disponibles",
+        "enroll_button": "Inscribirse"
+      },
+      "my_tournaments": {
+        "title": "Mis Competiciones",
+        "position": "Posición",
+        "next_match": "Próximo partido",
+        "view_tournament_button": "Ver Torneo"
+      },
+      "enrollment_modal": {
+        "title": "Inscribirse en",
+        "question": "¿Cómo quieres inscribirte?",
+        "enroll_alone_button": "Inscribirse Solo",
+        "enroll_with_partner_button": "Inscribirse con Compañero",
+        "invite_partner_title": "Invitar a un compañero:",
+        "search_placeholder": "Buscar compañero por nombre o email...",
+        "send_invitation_button": "Enviar Invitación",
+        "alert": {
+          "enroll_alone_success": "¡Inscripción individual exitosa!",
+          "enroll_error": "Error al inscribirse",
+          "select_tournament": "Por favor, selecciona un torneo.",
+          "no_players_found": "No se encontraron jugadores.",
+          "invitation_sent_success": "¡Invitación enviada con éxito!",
+          "invitation_error": "Error al enviar la invitación.",
+          "select_tournament_and_partner": "Por favor, selecciona un torneo y un compañero."
+        }
+      }
+    },
+    "tournament_elimination": {
+      "title": "Torneo: {{tournamentName}} — PadelFlow",
+      "summary": {
+        "title": "Resumen del Torneo",
+        "description": "Descripción",
+        "no_description": "No hay descripción.",
+        "type": "Tipo",
+        "match_duration": "Duración de partidos",
+        "start": "Inicio",
+        "end": "Fin"
+      },
+      "my_matches": {
+        "title": "Mis Próximos Partidos",
+        "vs": "vs",
+        "court": "Pista",
+        "no_matches": "No tienes partidos programados en este torneo."
+      },
+      "bracket": {
+        "title": "Bracket del Torneo",
+        "round": "Ronda",
+        "team": "Equipo",
+        "sets": "Sets",
+        "team_a": "Equipo A",
+        "team_b": "Equipo B",
+        "no_data": "No hay datos del cuadro para mostrar."
+      }
+    },
+    "tournament": {
+      "title": "Torneo: {{tournamentName}} — PadelFlow",
+      "summary": {
+        "title": "Resumen del Torneo",
+        "description": "Descripción",
+        "no_description": "No hay descripción.",
+        "type": "Tipo",
+        "match_duration": "Duración de partidos",
+        "start": "Inicio",
+        "end": "Fin"
+      },
+      "my_matches": {
+        "title": "Mis Próximos Partidos",
+        "vs": "vs",
+        "court": "Pista",
+        "no_matches": "No tienes partidos programados en este torneo."
+      },
+      "all_matches": {
+        "title": "Todos los Partidos del Torneo",
+        "match": "Partido {{number}}",
+        "court": "Pista",
+        "team_a": "Equipo A",
+        "team_b": "Equipo B",
+        "score": "Resultado"
+      }
+    },
+    "header": {
+      "brand": "PádelManager",
+      "player_panel": "Panel del Jugador",
+      "default_player_name": "Jugador",
+      "menu": {
+        "my_profile": "Mi Perfil",
+        "my_tournaments": "Mis Torneos",
+        "logout": "Cerrar sesión"
+      }
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "find_tournaments": "Buscar Torneos",
+      "my_tournaments": "Mis Torneos",
+      "my_stats": "Mis Estadísticas",
+      "my_profile": "Mi Perfil"
+    }
+  }
 }

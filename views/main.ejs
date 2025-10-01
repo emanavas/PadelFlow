@@ -3,7 +3,7 @@
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Pádel Torneos — Gestión, Inscripciones y Resultados</title>
+        <title><%= t('main.title') %></title>
         <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
         <link rel="stylesheet" href="assets/css/styles.css" />
@@ -11,7 +11,7 @@
       <body>
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
           <div class="container">
-            <a class="navbar-brand" href="#">PádelManager</a>
+            <a class="navbar-brand" href="#"><%= t('main.navbar.brand') %></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
@@ -33,11 +33,15 @@
                 <li class="nav-item ms-2">
                   <a class="btn btn-primary" href="/signup"><i class="fas fa-user-plus me-1"></i> <%= t('signupButton') %></a>
                 </li>
-                <li class="nav-item ms-2">
-                    <div class="language-switcher">
-                        <a href="/lang/en">EN</a> |
-                        <a href="/lang/es">ES</a>
-                    </div>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-globe"></i> <%= currentLanguage.toUpperCase() %>
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                    <li><a class="dropdown-item" href="/lang/en"><%= t('main.lang.en') %></a></li>
+                    <li><a class="dropdown-item" href="/lang/es"><%= t('main.lang.es') %></a></li>
+                    <li><a class="dropdown-item" href="/lang/ca"><%= t('main.lang.ca') %></a></li>
+                  </ul>
                 </li>
               </ul>
             </div>
@@ -48,18 +52,16 @@
           <div class="container">
             <div class="row align-items-center">
               <div class="col-lg-6">
-                <h1 class="display-5">Gestiona torneos de pádel fácilmente</h1>
-                <p class="lead">
-                  Round Robin, Eliminación directa, Ligas y todas las variantes de la Americana. Inscripciones, pagos, emparejamiento automático y resultados en tiempo real.
-                </p>
+                <h1 class="display-5"><%= t('main.hero.title') %></h1>
+                <p class="lead"><%= t('main.hero.subtitle') %></p>
                 <div class="d-flex gap-2">
-                  <a class="btn btn-primary btn-lg" href="#plans">Ver Planes</a>
-                  <a class="btn btn-outline-secondary btn-lg" href="#features">Ver Características</a>
+                  <a class="btn btn-primary btn-lg" href="#plans"><%= t('main.hero.button.plans') %></a>
+                  <a class="btn btn-outline-secondary btn-lg" href="#features"><%= t('main.hero.button.features') %></a>
                 </div>
                 <ul class="mt-4 list-unstyled text-muted">
-                  <li><i class="fas fa-check-circle text-success me-2"></i>Emparejamiento automático</li>
-                  <li><i class="fas fa-check-circle text-success me-2"></i>Pagos integrados</li>
-                  <li><i class="fas fa-check-circle text-success me-2"></i>Wallshow público para espectadores</li>
+                  <li><i class="fas fa-check-circle text-success me-2"></i><%= t('main.hero.feature1') %></li>
+                  <li><i class="fas fa-check-circle text-success me-2"></i><%= t('main.hero.feature2') %></li>
+                  <li><i class="fas fa-check-circle text-success me-2"></i><%= t('main.hero.feature3') %></li>
                 </ul>
               </div>
               <div class="col-lg-6 text-center">
@@ -71,15 +73,13 @@
 
         <section id="features" class="py-5">
           <div class="container">
-            <h2 class="mb-4">Características principales</h2>
+            <h2 class="mb-4"><%= t('main.features.title') %></h2>
             <div class="row g-4">
               <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                   <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-th-large text-primary me-2"></i>Modos de torneo</h5>
-                    <p class="card-text">
-                      Round Robin (Todos contra Todos), Eliminación Directa, Ligas, Americanas (Clásica, con Rotación, Canaria).
-                    </p>
+                    <h5 class="card-title"><i class="fas fa-th-large text-primary me-2"></i><%= t('main.features.card1.title') %></h5>
+                    <p class="card-text"><%= t('main.features.card1.text') %></p>
                   </div>
                 </div>
               </div>
@@ -87,10 +87,8 @@
               <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                   <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-clipboard-list text-primary me-2"></i>Gestión de inscripciones</h5>
-                    <p class="card-text">
-                      Inscripciones online, gestión de plazas, listas de espera y pagos seguros con integración de pasarela.
-                    </p>
+                    <h5 class="card-title"><i class="fas fa-clipboard-list text-primary me-2"></i><%= t('main.features.card2.title') %></h5>
+                    <p class="card-text"><%= t('main.features.card2.text') %></p>
                   </div>
                 </div>
               </div>
@@ -98,10 +96,8 @@
               <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                   <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-cogs text-primary me-2"></i>Emparejamiento automático</h5>
-                    <p class="card-text">
-                      Algoritmos para emparejar por nivel, rotación o parejas fijas. Configura reglas y deja que el sistema genere los cuadros.
-                    </p>
+                    <h5 class="card-title"><i class="fas fa-cogs text-primary me-2"></i><%= t('main.features.card3.title') %></h5>
+                    <p class="card-text"><%= t('main.features.card3.text') %></p>
                   </div>
                 </div>
               </div>
@@ -109,10 +105,8 @@
               <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                   <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-bolt text-primary me-2"></i>Resultados en tiempo real</h5>
-                    <p class="card-text">
-                      Actualizaciones instantáneas en Wallshow público y panel de control. Ideal para espectadores y jugadores.
-                    </p>
+                    <h5 class="card-title"><i class="fas fa-bolt text-primary me-2"></i><%= t('main.features.card4.title') %></h5>
+                    <p class="card-text"><%= t('main.features.card4.text') %></p>
                   </div>
                 </div>
               </div>
@@ -120,10 +114,8 @@
               <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                   <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-user-shield text-primary me-2"></i>Panel de administrador</h5>
-                    <p class="card-text">
-                      Herramientas para administradores de club: crear eventos, gestionar inscripciones, generar cuadros y editar resultados.
-                    </p>
+                    <h5 class="card-title"><i class="fas fa-user-shield text-primary me-2"></i><%= t('main.features.card5.title') %></h5>
+                    <p class="card-text"><%= t('main.features.card5.text') %></p>
                   </div>
                 </div>
               </div>
@@ -131,10 +123,8 @@
               <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                   <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-tv text-primary me-2"></i>Wallshow público</h5>
-                    <p class="card-text">
-                      Pantalla pública para mostrar el estado de partidos, resultados, podio y estadísticas en tiempo real.
-                    </p>
+                    <h5 class="card-title"><i class="fas fa-tv text-primary me-2"></i><%= t('main.features.card6.title') %></h5>
+                    <p class="card-text"><%= t('main.features.card6.text') %></p>
                   </div>
                 </div>
               </div>
@@ -144,20 +134,20 @@
 
         <section id="plans" class="py-5 bg-light">
           <div class="container">
-            <h2 class="mb-4">Planes</h2>
+            <h2 class="mb-4"><%= t('main.plans.title') %></h2>
             <div class="row g-4">
               <div class="col-md-4">
                 <div class="card h-100">
                   <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Starter</h5>
-                    <h6 class="text-primary">Gratis</h6>
-                    <p class="mb-4">Ideal para clubs que quieren probar la plataforma. Eventos limitados y funciones básicas.</p>
+                    <h5 class="card-title"><%= t('main.plans.card1.title') %></h5>
+                    <h6 class="text-primary"><%= t('main.plans.card1.price') %></h6>
+                    <p class="mb-4"><%= t('main.plans.card1.text') %></p>
                     <ul class="list-unstyled mb-4">
-                      <li><i class="fas fa-check text-success me-2"></i>Inscripciones básicas</li>
-                      <li><i class="fas fa-check text-success me-2"></i>Wallshow</li>
+                      <li><i class="fas fa-check text-success me-2"></i><%= t('main.plans.card1.feature1') %></li>
+                      <li><i class="fas fa-check text-success me-2"></i><%= t('main.plans.card1.feature2') %></li>
                     </ul>
                     <div class="mt-auto">
-                      <a class="btn btn-outline-primary w-100" href="admin.html">Empezar Gratis</a>
+                      <a class="btn btn-outline-primary w-100" href="admin.html"><%= t('main.plans.card1.button') %></a>
                     </div>
                   </div>
                 </div>
@@ -166,16 +156,16 @@
               <div class="col-md-4">
                 <div class="card border-primary h-100">
                   <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Pro</h5>
-                    <h6 class="text-primary">€49 / mes</h6>
-                    <p class="mb-4">Funciones completas para gestionar múltiples torneos y pagos integrados.</p>
+                    <h5 class="card-title"><%= t('main.plans.card2.title') %></h5>
+                    <h6 class="text-primary"><%= t('main.plans.card2.price') %></h6>
+                    <p class="mb-4"><%= t('main.plans.card2.text') %></p>
                     <ul class="list-unstyled mb-4">
-                      <li><i class="fas fa-check text-success me-2"></i>Emparejamiento automático</li>
-                      <li><i class="fas fa-check text-success me-2"></i>Pagos integrados</li>
-                      <li><i class="fas fa-check text-success me-2"></i>Soporte prioritario</li>
+                      <li><i class="fas fa-check text-success me-2"></i><%= t('main.plans.card2.feature1') %></li>
+                      <li><i class="fas fa-check text-success me-2"></i><%= t('main.plans.card2.feature2') %></li>
+                      <li><i class="fas fa-check text-success me-2"></i><%= t('main.plans.card2.feature3') %></li>
                     </ul>
                     <div class="mt-auto">
-                      <a class="btn btn-primary w-100" href="admin.html">Contratar Pro</a>
+                      <a class="btn btn-primary w-100" href="admin.html"><%= t('main.plans.card2.button') %></a>
                     </div>
                   </div>
                 </div>
@@ -184,15 +174,15 @@
               <div class="col-md-4">
                 <div class="card h-100">
                   <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Enterprise</h5>
-                    <h6 class="text-primary">A consultar</h6>
-                    <p class="mb-4">Soluciones a medida para federaciones y grandes organizadores.</p>
+                    <h5 class="card-title"><%= t('main.plans.card3.title') %></h5>
+                    <h6 class="text-primary"><%= t('main.plans.card3.price') %></h6>
+                    <p class="mb-4"><%= t('main.plans.card3.text') %></p>
                     <ul class="list-unstyled mb-4">
-                      <li><i class="fas fa-check text-success me-2"></i>Integraciones personalizadas</li>
-                      <li><i class="fas fa-check text-success me-2"></i>Desarrollo a medida</li>
+                      <li><i class="fas fa-check text-success me-2"></i><%= t('main.plans.card3.feature1') %></li>
+                      <li><i class="fas fa-check text-success me-2"></i><%= t('main.plans.card3.feature2') %></li>
                     </ul>
                     <div class="mt-auto">
-                      <a class="btn btn-outline-primary w-100" href="#contact">Solicitar demo</a>
+                      <a class="btn btn-outline-primary w-100" href="#contact"><%= t('main.plans.card3.button') %></a>
                     </div>
                   </div>
                 </div>
@@ -203,34 +193,34 @@
 
         <section id="contact" class="py-5">
           <div class="container">
-            <h2 class="mb-4">Contacto y demo</h2>
+            <h2 class="mb-4"><%= t('main.contact.title') %></h2>
             <div class="row">
               <div class="col-lg-6">
                 <form id="contactForm" class="needs-validation" novalidate>
                   <div class="mb-3">
-                    <label class="form-label">Nombre</label>
+                    <label class="form-label"><%= t('main.contact.form.name') %></label>
                     <input type="text" class="form-control" id="contactName" required />
-                    <div class="invalid-feedback">Ingrese su nombre.</div>
+                    <div class="invalid-feedback"><%= t('main.contact.form.name.feedback') %></div>
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Club o Empresa</label>
+                    <label class="form-label"><%= t('main.contact.form.company') %></label>
                     <input type="text" class="form-control" id="contactClub" />
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Email</label>
+                    <label class="form-label"><%= t('main.contact.form.email') %></label>
                     <input type="email" class="form-control" id="contactEmail" required />
-                    <div class="invalid-feedback">Ingrese un email válido.</div>
+                    <div class="invalid-feedback"><%= t('main.contact.form.email.feedback') %></div>
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Mensaje</label>
+                    <label class="form-label"><%= t('main.contact.form.message') %></label>
                     <textarea class="form-control" id="contactMsg" rows="4"></textarea>
                   </div>
-                  <button type="submit" class="btn btn-primary">Solicitar demo</button>
+                  <button type="submit" class="btn btn-primary"><%= t('main.contact.form.button') %></button>
                 </form>
               </div>
               <div class="col-lg-6">
-                <h5>Soporte</h5>
-                <p class="text-muted">Si necesitas una integración específica o una demo personalizada, escríbenos y te contactaremos para agendar una llamada.</p>
+                <h5><%= t('main.contact.support.title') %></h5>
+                <p class="text-muted"><%= t('main.contact.support.text') %></p>
                 <ul class="list-unstyled">
                   <li><i class="fas fa-phone me-2"></i>+34 600 000 000</li>
                   <li><i class="fas fa-envelope me-2"></i>hola@padelmanager.example</li>
@@ -242,7 +232,7 @@
 
         <footer class="py-4 bg-dark text-white">
           <div class="container d-flex justify-content-between">
-            <div>© <span id="year"></span> PádelManager</div>
+            <div>© <span id="year"></span> <%= t('main.footer.brand') %></div>
             <div>
               <a class="text-white me-3" href="#"><i class="fab fa-facebook"></i></a>
               <a class="text-white me-3" href="#"><i class="fab fa-instagram"></i></a>

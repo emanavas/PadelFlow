@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<%= currentLanguage %>">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Player Dashboard — PádelManager</title>
+  <title><%= t('player.dashboard.title') %></title>
   <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/styles.css" />
@@ -22,7 +22,7 @@
           <!-- Content -->
           <main class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-              <h1 class="h3 mb-0 text-dark">Hola, <%= user.name %>!</h1>
+              <h1 class="h3 mb-0 text-dark"><%= t('player.dashboard.welcome', { name: user.name }) %></h1>
             </div>
 
             <!-- Personal Stats -->
@@ -32,7 +32,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Partidos Jugados</h5>
+                                    <h5 class="card-title"><%= t('player.dashboard.stats.matches_played') %></h5>
                                     <p class="card-text fs-4"><%= stats.partidosJugados %></p>
                                 </div>
                                 <i class="fas fa-table-tennis fa-3x opacity-75"></i>
@@ -45,7 +45,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Victorias</h5>
+                                    <h5 class="card-title"><%= t('player.dashboard.stats.wins') %></h5>
                                     <p class="card-text fs-4"><%= stats.victorias %></p>
                                 </div>
                                 <i class="fas fa-trophy fa-3x opacity-75"></i>
@@ -58,7 +58,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Efectividad</h5>
+                                    <h5 class="card-title"><%= t('player.dashboard.stats.effectiveness') %></h5>
                                     <p class="card-text fs-4"><%= stats.efectividad %></p>
                                 </div>
                                 <i class="fas fa-bullseye fa-3x opacity-75"></i>
@@ -71,7 +71,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Próximo Partido</h5>
+                                    <h5 class="card-title"><%= t('player.dashboard.stats.next_match') %></h5>
                                     <p class="card-text fs-4"><%= stats.proximoPartido %></p>
                                 </div>
                                 <i class="fas fa-calendar-alt fa-3x opacity-75"></i>
@@ -85,21 +85,21 @@
             <% if (pendingInvitations && pendingInvitations.length > 0) { %>
             <div class="card mb-4 border-warning">
                 <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0"><i class="fas fa-bell me-2"></i>Invitaciones Pendientes</h4>
+                    <h4 class="mb-0"><i class="fas fa-bell me-2"></i><%= t('player.dashboard.invitations.title') %></h4>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         <% pendingInvitations.forEach(invitation => { %>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    Invitación de <strong><%= invitation.inviting_user_name %></strong> para el torneo <strong><%= invitation.tournament_name %></strong>
+                                    <%- t('player.dashboard.invitations.invitation_text', { inviting_user_name: invitation.inviting_user_name, tournament_name: invitation.tournament_name }) %>
                                 </div>
                                 <div>
                                     <form action="/player/invitations/<%= invitation.id %>/accept" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-success btn-sm me-2">Aceptar</button>
+                                        <button type="submit" class="btn btn-success btn-sm me-2"><%= t('player.dashboard.invitations.accept') %></button>
                                     </form>
                                     <form action="/player/invitations/<%= invitation.id %>/decline" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-danger btn-sm">Rechazar</button>
+                                        <button type="submit" class="btn btn-danger btn-sm"><%= t('player.dashboard.invitations.decline') %></button>
                                     </form>
                                 </div>
                             </li>
@@ -112,21 +112,21 @@
             <!-- Available Competitions -->
             <div class="card mb-4">
                 <div class="card-header bg-dark text-white">
-                    <h4 class="mb-0">Competiciones Disponibles</h4>
+                    <h4 class="mb-0"><%= t('player.dashboard.available_tournaments.title') %></h4>
                 </div>
                 <div class="card-body">
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Buscar torneo por nombre o club...">
+                        <input type="text" class="form-control" placeholder="<%= t('player.dashboard.available_tournaments.search_placeholder') %>">
                         <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
                     </div>
                     <ul class="list-group list-group-flush">
-                        <% availableTournaments.forEach(t => { %>
+                        <% availableTournaments.forEach(tournament => { %>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="mb-1"><%= t.name %></h5>
-                                    <small class="text-muted"><%= t.club_name %> | Fecha límite: <%= new Date(t.end_date).toLocaleDateString() %> | Plazas disponibles: <%= t.available_slots %></small>
+                                    <h5 class="mb-1"><%= tournament.name %></h5>
+                                    <small class="text-muted"><%= tournament.club_name %> | <%= t('player.dashboard.available_tournaments.deadline') %>: <%= new Date(tournament.end_date).toLocaleDateString() %> | <%= t('player.dashboard.available_tournaments.available_slots') %>: <%= tournament.available_slots %></small>
                                 </div>
-                                <button class="btn btn-success enroll-btn" data-tournament-id="<%= t.id %>" data-tournament-name="<%= t.name %>">Inscribirse</button>
+                                <button class="btn btn-success enroll-btn" data-tournament-id="<%= tournament.id %>" data-tournament-name="<%= tournament.name %>"><%= t('player.dashboard.available_tournaments.enroll_button') %></button>
                             </li>
                         <% }); %>
                     </ul>
@@ -136,18 +136,18 @@
             <!-- My Competitions -->
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Mis Competiciones</h4>
+                    <h4 class="mb-0"><%= t('player.dashboard.my_tournaments.title') %></h4>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
-                        <% myTournaments.forEach(t => { %>
+                        <% myTournaments.forEach(tournament => { %>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="mb-1"><%= t.name %></h5>
-                                    <p class="mb-1"><strong>Posición:</strong> <%= t.position %></p>
-                                    <small class="text-muted">Próximo partido: <%= t.nextMatch %></small>
+                                    <h5 class="mb-1"><%= tournament.name %></h5>
+                                    <p class="mb-1"><strong><%= t('player.dashboard.my_tournaments.position') %>:</strong> <%= tournament.position %></p>
+                                    <small class="text-muted"><%= t('player.dashboard.my_tournaments.next_match') %>: <%= tournament.nextMatch %></small>
                                 </div>
-                                <a href="/player/tournaments/<%= t.id %>" class="btn btn-info">Ver Torneo</a>
+                                <a href="/player/tournaments/<%= tournament.id %>" class="btn btn-info"><%= t('player.dashboard.my_tournaments.view_tournament_button') %></a>
                             </li>
                         <% }); %>
                     </ul>
@@ -163,23 +163,23 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="enrollmentModalLabel">Inscribirse en <span id="modalTournamentName"></span></h5>
+                    <h5 class="modal-title" id="enrollmentModalLabel"><%= t('player.dashboard.enrollment_modal.title') %> <span id="modalTournamentName"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Cómo quieres inscribirte?</p>
+                    <p><%= t('player.dashboard.enrollment_modal.question') %></p>
                     <div class="d-grid gap-2 mb-3">
-                        <button class="btn btn-primary" id="enrollAloneBtn">Inscribirse Solo</button>
-                        <button class="btn btn-secondary" id="enrollWithPartnerBtn">Inscribirse con Compañero</button>
+                        <button class="btn btn-primary" id="enrollAloneBtn"><%= t('player.dashboard.enrollment_modal.enroll_alone_button') %></button>
+                        <button class="btn btn-secondary" id="enrollWithPartnerBtn"><%= t('player.dashboard.enrollment_modal.enroll_with_partner_button') %></button>
                     </div>
 
                     <div id="partnerEnrollmentForm" style="display: none;">
-                        <h6>Invitar a un compañero:</h6>
+                        <h6><%= t('player.dashboard.enrollment_modal.invite_partner_title') %></h6>
                         <div class="mb-3">
-                            <input type="text" class="form-control" id="playerSearchInput" placeholder="Buscar compañero por nombre o email...">
+                            <input type="text" class="form-control" id="playerSearchInput" placeholder="<%= t('player.dashboard.enrollment_modal.search_placeholder') %>">
                             <div id="playerSearchResults" class="list-group mt-2"></div>
                         </div>
-                        <button class="btn btn-success" id="sendInvitationBtn" disabled>Enviar Invitación</button>
+                        <button class="btn btn-success" id="sendInvitationBtn" disabled><%= t('player.dashboard.enrollment_modal.send_invitation_button') %></button>
                     </div>
                 </div>
             </div>
@@ -220,14 +220,14 @@
                     });
                     const result = await response.json();
                     if (result.success) {
-                        alert('Inscripción individual exitosa!');
+                        alert('<%= t("player.dashboard.enrollment_modal.alert.enroll_alone_success") %>');
                         window.location.reload(); // Reload to update tournament lists
                     } else {
-                        alert(`Error al inscribirse: ${result.message}`);
+                        alert(`<%= t("player.dashboard.enrollment_modal.alert.enroll_error") %>: ${result.message}`);
                     }
                     enrollmentModal.hide();
                 } else {
-                    alert('Por favor, selecciona un torneo.');
+                    alert('<%= t("player.dashboard.enrollment_modal.alert.select_tournament") %>');
                 }
             });
 
@@ -269,7 +269,7 @@
                         playerSearchResults.appendChild(item);
                     });
                 } else {
-                    playerSearchResults.innerHTML = '<div class="list-group-item">No se encontraron jugadores.</div>';
+                    playerSearchResults.innerHTML = `<div class="list-group-item"><%= t("player.dashboard.enrollment_modal.alert.no_players_found") %></div>`;
                 }
             });
 
@@ -285,17 +285,17 @@
                     });
                     const result = await response.json();
                     if (result.success) {
-                        alert('Invitación enviada con éxito!');
+                        alert('<%= t("player.dashboard.enrollment_modal.alert.invitation_sent_success") %>');
                     } else {
                         if(result.message){
                             alert(result.message);
                         }else{
-                            alert('Error al enviar la invitación.');
+                            alert('<%= t("player.dashboard.enrollment_modal.alert.invitation_error") %>');
                         }
                     }
                     enrollmentModal.hide();
                 } else {
-                    alert('Por favor, selecciona un torneo y un compañero.');
+                    alert('<%= t("player.dashboard.enrollment_modal.alert.select_tournament_and_partner") %>');
                 }
             });
         });

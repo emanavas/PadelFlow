@@ -1,0 +1,237 @@
+{
+  "loginTitle": "Inicia Sessió a PadelFlow",
+  "signupTitle": "Registra't a PadelFlow",
+  "welcome": "Benvingut a PadelFlow",
+  "emailLabel": "Correu Electrònic",
+  "passwordLabel": "Contrasenya",
+  "loginButton": "Iniciar Sessió",
+  "signupButton": "Registrar-se",
+  "noAccount": "No tens compte? Registra't",
+  "features": "Característiques",
+  "plans": "Plans",
+  "contact": "Contacte",
+  "round_final": "Final",
+  "round_semifinal": "Semifinal",
+  "round_quarterfinal": "Quarts de Final",
+  "round_of_16": "Vuitens de Final",
+  "round_of_32": "Setzens de Final",
+  "round_of_64": "Trenta-dosens de Final",
+  "round_of_128": "Seixanta-quatrens de Final",
+  "side_right": "dreta",
+  "side_left": "esquerra",
+  "main": {
+    "title": "Tornejos de Pàdel — Gestió, Inscripcions i Resultats",
+    "navbar": {
+      "brand": "PàdelManager"
+    },
+    "hero": {
+      "title": "Gestiona tornejos de pàdel fàcilment",
+      "subtitle": "Round Robin, Eliminació directa, Lligues i totes les variants de l'Americana. Inscripcions, pagaments, aparellament automàtic i resultats en temps real.",
+      "button": {
+        "plans": "Veure Plans",
+        "features": "Veure Característiques"
+      },
+      "feature1": "Aparellament automàtic",
+      "feature2": "Pagaments integrats",
+      "feature3": "Wallshow públic per a espectadors"
+    },
+    "features": {
+      "title": "Característiques principals",
+      "card1": {
+        "title": "Modes de torneig",
+        "text": "Round Robin (Tots contra Tots), Eliminació Directa, Lligues, Americanes (Clàssica, amb Rotació, Canària)."
+      },
+      "card2": {
+        "title": "Gestió d'inscripcions",
+        "text": "Inscripcions online, gestió de places, llistes d'espera i pagaments segurs amb integració de passarel·la."
+      },
+      "card3": {
+        "title": "Aparellament automàtic",
+        "text": "Algoritmes per aparellar per nivell, rotació o parelles fixes. Configura regles i deixa que el sistema generi els quadres."
+      },
+      "card4": {
+        "title": "Resultats en temps real",
+        "text": "Actualitzacions instantànies en Wallshow públic i panell de control. Ideal per a espectadors i jugadors."
+      },
+      "card5": {
+        "title": "Panell d'administrador",
+        "text": "Eines per a administradors de club: crear esdeveniments, gestionar inscripcions, generar quadres i editar resultats."
+      },
+      "card6": {
+        "title": "Wallshow públic",
+        "text": "Pantalla pública per mostrar l'estat de partits, resultats, podi i estadístiques en temps real."
+      }
+    },
+    "plans": {
+      "title": "Plans",
+      "card1": {
+        "title": "Starter",
+        "price": "Gratis",
+        "text": "Ideal per a clubs que volen provar la plataforma. Esdeveniments limitats i funcions bàsiques.",
+        "feature1": "Inscripcions bàsiques",
+        "feature2": "Wallshow",
+        "button": "Començar Gratis"
+      },
+      "card2": {
+        "title": "Pro",
+        "price": "€49 / mes",
+        "text": "Funcions completes per gestionar múltiples tornejos i pagaments integrats.",
+        "feature1": "Aparellament automàtic",
+        "feature2": "Pagaments integrats",
+        "feature3": "Suport prioritari",
+        "button": "Contractar Pro"
+      },
+      "card3": {
+        "title": "Enterprise",
+        "price": "A consultar",
+        "text": "Solucions a mida per a federacions i grans organitzadors.",
+        "feature1": "Integracions personalitzades",
+        "feature2": "Desenvolupament a mida",
+        "button": "Sol·licitar demo"
+      }
+    },
+    "contact": {
+      "title": "Contacte i demo",
+      "form": {
+        "name": "Nom",
+        "name.feedback": "Introduïu el vostre nom.",
+        "company": "Club o Empresa",
+        "email": "Email",
+        "email.feedback": "Introduïu un email vàlid.",
+        "message": "Missatge",
+        "button": "Sol·licitar demo"
+      },
+      "support": {
+        "title": "Suport",
+        "text": "Si necessites una integració específica o una demo personalitzada, escriu-nos i et contactarem per agendar una trucada."
+      }
+    },
+    "footer": {
+      "brand": "PàdelManager"
+    },
+    "lang": {
+      "en": "English",
+      "es": "Español",
+      "ca": "Català"
+    }
+  },
+  "player": {
+    "dashboard": {
+      "title": "Dashboard del Jugador — PàdelManager",
+      "welcome": "Hola, {{name}}!",
+      "stats": {
+        "matches_played": "Partits Jugats",
+        "wins": "Victòries",
+        "effectiveness": "Efectivitat",
+        "next_match": "Pròxim Partit"
+      },
+      "invitations": {
+        "title": "Invitacions Pendents",
+        "invitation_text": "Invitació de <strong>{{inviting_user_name}}</strong> per al torneig <strong>{{tournament_name}}</strong>",
+        "accept": "Acceptar",
+        "decline": "Rebutjar"
+      },
+      "available_tournaments": {
+        "title": "Competicions Disponibles",
+        "search_placeholder": "Cerca torneig per nom o club...",
+        "deadline": "Data límit",
+        "available_slots": "Places disponibles",
+        "enroll_button": "Inscriure's"
+      },
+      "my_tournaments": {
+        "title": "Les Meves Competicions",
+        "position": "Posició",
+        "next_match": "Pròxim partit",
+        "view_tournament_button": "Veure Torneig"
+      },
+      "enrollment_modal": {
+        "title": "Inscriure's a",
+        "question": "Com et vols inscriure?",
+        "enroll_alone_button": "Inscriure's Sol",
+        "enroll_with_partner_button": "Inscriure's amb Company",
+        "invite_partner_title": "Convidar a un company:",
+        "search_placeholder": "Cerca company per nom o email...",
+        "send_invitation_button": "Enviar Invitació",
+        "alert": {
+          "enroll_alone_success": "Inscripció individual amb èxit!",
+          "enroll_error": "Error en inscriure's",
+          "select_tournament": "Si us plau, selecciona un torneig.",
+          "no_players_found": "No s'han trobat jugadors.",
+          "invitation_sent_success": "Invitació enviada amb èxit!",
+          "invitation_error": "Error en enviar la invitació.",
+          "select_tournament_and_partner": "Si us plau, selecciona un torneig i un company."
+        }
+      }
+    },
+    "tournament_elimination": {
+      "title": "Torneig: {{tournamentName}} — PadelFlow",
+      "summary": {
+        "title": "Resum del Torneig",
+        "description": "Descripció",
+        "no_description": "No hi ha descripció.",
+        "type": "Tipus",
+        "match_duration": "Durada de partits",
+        "start": "Inici",
+        "end": "Fi"
+      },
+      "my_matches": {
+        "title": "Els Meus Pròxims Partits",
+        "vs": "vs",
+        "court": "Pista",
+        "no_matches": "No tens partits programats en aquest torneig."
+      },
+      "bracket": {
+        "title": "Bracket del Torneig",
+        "round": "Ronda",
+        "team": "Equip",
+        "sets": "Sets",
+        "team_a": "Equip A",
+        "team_b": "Equip B",
+        "no_data": "No hi ha dades del quadre per a mostrar."
+      }
+    },
+    "tournament": {
+      "title": "Torneig: {{tournamentName}} — PadelFlow",
+      "summary": {
+        "title": "Resum del Torneig",
+        "description": "Descripció",
+        "no_description": "No hi ha descripció.",
+        "type": "Tipus",
+        "match_duration": "Durada de partits",
+        "start": "Inici",
+        "end": "Fi"
+      },
+      "my_matches": {
+        "title": "Els Meus Pròxims Partits",
+        "vs": "vs",
+        "court": "Pista",
+        "no_matches": "No tens partits programats en aquest torneig."
+      },
+      "all_matches": {
+        "title": "Tots els Partits del Torneig",
+        "match": "Partit {{number}}",
+        "court": "Pista",
+        "team_a": "Equip A",
+        "team_b": "Equip B",
+        "score": "Resultat"
+      }
+    },
+    "header": {
+      "brand": "PàdelManager",
+      "player_panel": "Panell del Jugador",
+      "default_player_name": "Jugador",
+      "menu": {
+        "my_profile": "El Meu Perfil",
+        "my_tournaments": "Els Meus Tornejos",
+        "logout": "Tancar sessió"
+      }
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "find_tournaments": "Cercar Tornejos",
+      "my_tournaments": "Els Meus Tornejos",
+      "my_stats": "Les Meves Estadístiques",
+      "my_profile": "El Meu Perfil"
+    }
+  }
+}

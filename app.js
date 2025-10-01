@@ -27,7 +27,7 @@ i18next
             loadPath: __dirname + '/locales/{{lng}}/translation.json',
         },
         fallbackLng: 'en',
-        preload: ['en', 'es'],
+        preload: ['en', 'es', 'ca'],
         saveMissing: true,
         detection: {
             order: ['cookie', 'header'],
