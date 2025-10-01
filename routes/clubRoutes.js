@@ -48,6 +48,25 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
     }
 });
 
+// Show all tournaments in the club
+router.get('/tournaments', isAuthenticated, isClubAdmin, async (req, res) => {
+    try {
+        const clubId = req.session.clubId;
+        if (!clubId) {
+            return res.status(400).send('Club ID not found in session.');
+        }
+        const club = await clubModel.getClubById(clubId);
+        if (!club) {
+            return res.status(404).send('Club not found.');
+        }
+        const tournaments = await tournamentModel.getTournamentsByClubId(clubId);
+        res.render('club/tournaments', { title: 'Torneos del Club', tournaments, club, user: req.user });
+    } catch (err) {
+        console.error('Error fetching tournaments:', err.message);
+        res.status(500).send('Error fetching tournaments.');
+    }
+});
+
 // Show player creation form
 router.get('/players/create', isAuthenticated, isClubAdmin, async (req, res) => {
     try {
@@ -59,7 +78,7 @@ router.get('/players/create', isAuthenticated, isClubAdmin, async (req, res) => 
         if (!club) {
             return res.status(404).send('Club not found.');
         }
-        res.render('club/create_player', { title: 'Crear Jugador', club });
+        res.render('club/create_player', { title: 'Crear Jugador', club, user: req.user });
     } catch (err) {
         console.error('Error showing create player form:', err.message);
         res.status(500).send('Error showing create player form.');
@@ -91,7 +110,7 @@ router.get('/players', isAuthenticated, isClubAdmin, async (req, res) => {
             return res.status(404).send('Club not found.');
         }
         const players = await userModel.getUsersByRole('player');
-        res.render('club/players', { title: 'Jugadores del Club', players, club });
+        res.render('club/players', { title: 'Jugadores del Club', players, club, user: req.user });
     } catch (err) {
         console.error('Error fetching players:', err.message);
         res.status(500).send('Error fetching players.');
@@ -122,11 +141,29 @@ router.get('/players/add-to-tournament/:id', async (req, res) => {
             title: 'Añadir Jugador a Torneo',
             player,
             tournaments,
-            club
+            club,
+            user: req.user
         });
     } catch (err) {
         console.error('Error showing add player to tournament form:', err.message);
         res.status(500).send('Error showing add player to tournament form.');
+    }
+});
+
+// Handle add player to tournament form
+router.post('/players/add-to-tournament', isAuthenticated, isClubAdmin, async (req, res) => {
+    const { playerId, tournamentId } = req.body;
+    try {
+        if (!tournamentId) {
+            throw new Error('Es necesario seleccionar un torneo.');
+        }
+        await tournamentModel.addPlayerToTournament(tournamentId, playerId);
+        req.flash('success_msg', 'Jugador añadido al torneo correctamente.');
+        res.redirect(`/club/tournaments/${tournamentId}/manage`);
+    } catch (err) {
+        console.error('Error adding player to tournament:', err.message);
+        req.flash('error', err.message);
+        res.redirect(`/club/players/add-to-tournament/${playerId}`);
     }
 });
 
@@ -146,7 +183,7 @@ router.get('/players/edit/:id', isAuthenticated, isClubAdmin, async (req, res) =
         if (!player) {
             return res.status(404).send('Player not found.');
         }
-        res.render('club/edit_player', { title: 'Editar Jugador', player, club });
+        res.render('club/edit_player', { title: 'Editar Jugador', player, club, user: req.user });
     } catch (err) {
         console.error('Error showing edit player form:', err.message);
         res.status(500).send('Error showing edit player form.');
@@ -196,7 +233,7 @@ router.get('/courts', isAuthenticated, isClubAdmin, async (req, res) => {
             return res.status(404).send('Club not found.');
         }
         const courts = await courtModel.getCourtsByClub(clubId);
-        res.render('club/courts', { title: 'Pistas del Club', courts, club });
+        res.render('club/courts', { title: 'Pistas del Club', courts, club, user: req.user });
     } catch (err) {
         console.error('Error fetching courts:', err.message);
         res.status(500).send('Error fetching courts.');

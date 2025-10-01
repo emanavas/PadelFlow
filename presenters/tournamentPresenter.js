@@ -195,7 +195,7 @@ module.exports = {
 
         const courtMap = new Map();
         courts.forEach(court => {
-            courtMap.set(court.id, { ...court, currentMatch: null, upcomingMatches: [] });
+            courtMap.set(court.id, { ...court, currentMatch: null, lastCompletedMatch: null, upcomingMatches: [] });
         });
 
         const now = new Date();
@@ -220,14 +220,17 @@ module.exports = {
         matches.forEach(match => {
             const courtData = courtMap.get(match.court_id);
             if (courtData) {
-                if (!match.score && match.startDateTime <= now && !courtData.currentMatch) {
+                if (match.score) { // Match has a score, it's completed
+                    if (!courtData.lastCompletedMatch || match.startDateTime > courtData.lastCompletedMatch.startDateTime) {
+                        courtData.lastCompletedMatch = match;
+                    }
+                } else if (!match.score && match.startDateTime <= now && !courtData.currentMatch) {
                     // Match is ongoing and no current match assigned to this court yet
                     courtData.currentMatch = match;
                 } else if (!match.score && match.startDateTime > now) {
                     // Match is upcoming
                     courtData.upcomingMatches.push(match);
                 }
-                // If match has score, it's already finished, so we don't display it as current or upcoming
             } else {
                 console.warn(`Court data not found for match ${match.id} with court_id ${match.court_id}`);
             }

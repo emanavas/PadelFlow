@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
+const flash = require('connect-flash');
 const i18next = require('i18next');
 const i18nextMiddleware = require('i18next-http-middleware');
 const Backend = require('i18next-fs-backend');
@@ -55,6 +56,18 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false } // Poner a true si usas HTTPS
 }));
+
+// Configuración de connect-flash
+app.use(flash());
+
+// Middleware para pasar mensajes flash a las vistas
+app.use((req, res, next) => {
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error_msg = req.flash('error_msg');
+    res.locals.error = req.flash('error')[0];
+    res.locals.info_msg = req.flash('info_msg');
+    next();
+});
 
 // Middleware para pasar la función de traducción y el idioma actual a las vistas
 app.use((req, res, next) => {

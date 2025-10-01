@@ -8,10 +8,8 @@ const userModel = require('../models/userModel');
 // Route to display login form
 router.get('/login', (req, res) => {
     res.render('auth/login', {
-        title: req.t('loginTitle'),
-        mensaje: req.session.mensaje || null
+        title: req.t('loginTitle')
     });
-    req.session.mensaje = null;
 });
 
 // Route to process login
@@ -21,14 +19,14 @@ router.post('/login', async (req, res) => {
         const user = await userModel.findUserByEmail(email);
 
         if (!user) {
-            req.session.mensaje = 'Credenciales inválidas.';
+            req.flash('error_msg', 'Credenciales invalidas.');
             return res.redirect('/login');
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
-
+        
         if (!isMatch) {
-            req.session.mensaje = 'Credenciales inválidas.';
+            req.flash('error_msg', 'Credenciales inválidas.');
             return res.redirect('/login');
         }
 
@@ -51,7 +49,7 @@ router.post('/login', async (req, res) => {
         }
     } catch (err) {
         console.error('Error during login:', err.message);
-        req.session.mensaje = 'Error interno en el login.';
+        req.flash('error_msg', 'Error interno en el login.');
         res.redirect('/login');
     }
 });
@@ -65,28 +63,33 @@ router.get('/signup', (req, res) => {
 router.post('/signup', async (req, res) => {
     try {
         const { userType, clubName, email, password } = req.body; 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);    
 
         if (userType === 'club_admin') {
             if (!clubName) {
-                return res.status(400).send('Club Name is required for Club Admin registration.');
+                req.flash('error_msg', 'Club Name is required for Club Admin registration.');
+                return res.redirect('/signup');
             }
             const clubResult = await clubModel.createClub(clubName);
             const clubId = clubResult.id;
 
+            req.flash('success_msg', 'Club y Admin registrados correctamente');
             await userModel.createUser(email, hashedPassword, 'club_admin', clubId);
             console.log('Club and Club Admin registered');
             res.redirect('/login');
         } else if (userType === 'platform_admin') {
             await userModel.createUser(email, hashedPassword, 'platform_admin', null);
+            req.flash('success_msg', 'Plataforma registrada correctamente');
             console.log('Platform Admin registered');
             res.redirect('/login');
         } else {
-            return res.status(400).send('Invalid user type selected.');
+            req.flash('error_msg', 'Invalid user type selected.');
+            return res.redirect('/signup');
         }
     } catch (err) {
         console.error('Error during user registration:', err.message);
-        res.status(500).send('Error during user registration.');
+        req.flash('error_msg', 'Error during user registration.');
+        res.redirect('/signup');
     }
 });
 
@@ -102,10 +105,12 @@ router.post('/player/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         await userModel.createUser(name, email, hashedPassword, 'player', null);
         console.log('Player self-registered:', email);
+        req.flash('success_msg', 'Jugador registrado correctamente. Por favor, inicie sesión.');
         res.redirect('/login');
     } catch (err) {
         console.error('Error during player self-registration:', err.message);
-        res.status(500).send('Error during player self-registration.');
+        req.flash('error_msg', 'Error during player self-registration.');
+        res.redirect('/player/register');
     }
 });
 
@@ -115,6 +120,7 @@ router.post('/player/signup', async (req, res) => {
         const { name, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         await userModel.createUser(name, email, hashedPassword, 'player', null);
+        req.flash('success_msg', 'Jugador registrado correctamente');
         console.log('Player user and entry registered:', email);
         res.status(200).send('Player registered successfully.');
     } catch (err) {
@@ -124,15 +130,27 @@ router.post('/player/signup', async (req, res) => {
 });
 
 // Route to log out
-router.get('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            console.error('Error destroying session:', err);
-            return res.status(500).send('Could not log out.');
-        }
-        res.clearCookie('connect.sid'); // Clear session cookie (adjust name if different)
-        res.redirect('/login'); // Redirect to login page
-    });
+router.get('/logout', (req, res, next) => {
+    if (req.session) {
+        req.flash('success_msg', 'You have been logged out.');
+
+        // Clear user-specific session data
+        req.session.user = null;
+        req.session.userId = null;
+        req.session.userRole = null;
+        req.session.clubId = null;
+
+        req.session.save(function (err) {
+            if (err) {
+                console.error('Error saving session:', err);
+                return next(err);
+            }
+            res.redirect('/login');
+        });
+    } else {
+        // If no session exists, just redirect
+        res.redirect('/login');
+    }
 });
 
 module.exports = router;

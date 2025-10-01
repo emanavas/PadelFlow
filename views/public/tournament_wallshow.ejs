@@ -28,11 +28,14 @@
                         <div class="swiper-container">
                             <div class="swiper-wrapper">
                                 <% if (courtsData && courtsData.length > 0) { %>
-                                    <% courtsData.forEach(court => { %>
+                                    <% courtsData.forEach(court => {
+                                        // Ensure court.name is defined
+                                        const courtName = court.name || 'Pista Desconocida';
+                                    %>
                                         <div class="swiper-slide">
                                             <div class="card">
                                                 <div class="card-header">
-                                                    <h5>Pista: <%= court.name %></h5>
+                                                    <h5>Pista: <%= courtName %></h5>
                                                     <p class="mb-0"><small>Ronda: <%- currentRoundInPlay %></small></p>
                                                 </div>
                                                 <div class="card-body">
@@ -44,6 +47,9 @@
                                                         %>
                                                         <div class="match-item mb-3 pb-3 border-bottom">
                                                             <p class="mb-1"><strong><%= currentTeamANames %> vs <%= currentTeamBNames %></strong></p>
+                                                            <% if (court.currentMatch.score) { %>
+                                                                <p class="mb-1">Resultado: <span class="badge bg-success"><%= court.currentMatch.score %></span></p>
+                                                            <% } %>
                                                             <p class="text-muted mb-0"><small><i class="fas fa-clock me-1"></i> <%= court.currentMatch.startTime %></small></p>
                                                         </div>
                                                     <% } else { %>
@@ -108,6 +114,23 @@
                     prevEl: '.swiper-button-prev',
                 },
             });
+
+            // SSE for real-time updates
+            const tournamentId = '<%= tournament.id %>';
+            const eventSource = new EventSource(`/api/events/${tournamentId}`);
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'scoreUpdate') {
+                    console.log('Score updated, reloading wallshow...');
+                    location.reload(); // Reload the page to fetch updated data
+                }
+            };
+
+            eventSource.onerror = function(err) {
+                console.error('EventSource failed:', err);
+                eventSource.close();
+            };
         });
     </script>
 </body>

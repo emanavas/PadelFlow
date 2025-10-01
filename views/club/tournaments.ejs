@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-p" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Torneos — <%= club.name %>
+  </title>
+  <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="/assets/css/club_dashboard.css" />
+</head>
+
+<body>
+  <%- include('partials/club_header') %>
+    <div class="admin-shell d-flex">
+      <!-- Sidebar -->
+      <%- include('partials/club_sidebar', { club: club }) %>
+
+        <!-- Main -->
+        <div class="main flex-grow-1">
+          <!-- Content -->
+          <main class="container-fluid p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0">Torneos de <%= club.name %>
+              </h1>
+              <a href="/club/tournaments/create" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Crear Torneo
+              </a>
+            </div>
+
+            <div class="row g-4">
+              <% if (tournaments.length > 0) { %>
+                <% tournaments.forEach(tournament => { %>
+                  <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                      <div class="card-body">
+                        <h5 class="card-title"><%= tournament.name %></h5>
+                        <p class="card-text"><%= tournament.description %></p>
+                        <p class="card-text"><small class="text-muted"><%= new Date(tournament.date).toLocaleDateString() %></small></p>
+                        <span class="badge bg-secondary ms-2"><%= tournament.type %></span>
+                      </div>
+                      <div class="card-footer">
+                        <a href="/club/tournaments/<%= tournament.id %>/manage" class="btn btn-sm btn-primary">
+                          <i class="fas fa-users-cog me-1"></i> Gestionar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                <% }); %>
+              <% } else { %>
+                <div class="col">
+                  <div class="card">
+                    <div class="card-body text-center">
+                      <p class="card-text">No hay torneos registrados.</p>
+                      <a href="/club/tournaments/create" class="btn btn-primary">Crear tu primer torneo</a>
+                    </div>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </main>
+        </div>
+    </div>
+
+    <script src="/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
