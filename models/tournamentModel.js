@@ -308,8 +308,8 @@ const tournamentModel = {
      */
     createTournament: async function(tournamentData) {
         const { club_id, name, description, type, start_date, end_date, max_players, setting } = tournamentData;
-        if (!isPowerOfTwo(max_players)) {
-            throw new Error('El número máximo de jugadores debe ser una potencia de 2 (2, 4, 8, 16, 32, 64, etc.).');
+        if (type === 'eliminacion' && !isPowerOfTwo(max_players)) {
+            throw new Error('El número máximo de jugadores para un torneo de eliminación debe ser una potencia de 2 (2, 4, 8, 16, 32, 64, etc.).');
         }
         const settingJSON = JSON.stringify(setting || { match_duration: 60 });
         try {

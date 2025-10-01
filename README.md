@@ -1,237 +1,168 @@
-# PadelFlow: Lista de tareas y contexto de aspectos claves
+# 🚀 PadelFlow: Un Vistazo Técnico Detallado
 
-Esta es una lista de verificación detallada para el desarrollo de la plataforma de gestión de torneos de pádel "PadelFlow".
+PadelFlow es una **plataforma web integral** para la gestión de torneos de pádel, diseñada como un sistema multi-inquilino (*multi-tenant*) sobre el ecosistema de **Node.js**. Su objetivo principal es automatizar la compleja logística de la organización de torneos, ofreciendo una solución centralizada para administradores de plataforma y autonomía para cada club.
 
-Definicion de las necesidades del proyecto:
-* La plataforma cuenta con 3 roles de usuarios, los cuales son: (admin_plataforma, admin_club, jugador) ademas de los espectadores (sin registo pueden visualizar el wallshow)
-* cada administrador puede entrar a dashboard correspondientes con funciones diferentes
-* administrador de plataforma puede visualizar estado general de la plataforma como ser: listado de clubes, pagos, metricas, lista de torneos, etc
-* 
-* 
-* adminstrador de club puede crear torneos, añadir jugadores al club o eventos etc.
-* 
-## 1. Configuración del Proyecto y Entorno
+## 1. 💡 Resumen del Proyecto
 
-- [x] Inicializar el proyecto Node.js: `npm init -y`.
-- [x] Crear el archivo `.gitignore`.
-- [x] Añadir `node_modules/` y `.env` al `.gitignore`.
-- [x] Instalar dependencias principales: `npm install express ejs sqlite3 express-session bcryptjs`.
-- [x] Instalar dependencias de desarrollo: `npm install nodemon --save-dev`.
-- [x] Añadir scripts `start` y `dev` al `package.json`.
+| Característica | Detalle |
+| :--- | :--- |
+| **Propósito Principal** | Gestión y automatización de torneos de pádel. |
+| **Modelo de Negocio** | **Freemium** (límite de 3 torneos activos para cuentas no premium). |
+| **Base Tecnológica** | Node.js, Express.js. |
+| **Arquitectura** | Patrón **MVC** (Model-View-Controller). |
+| **Base de Datos** | **SQLite** con extensiones especializadas. |
+| **Licencia** | **Apache 2.0**. |
 
-## 2. Estructura de Directorios y Archivos
+### 1.3. 👥 Jerarquía de Roles de Usuario y Permisos
 
-- [x] Crear carpeta `public`.
-- [x] Crear carpeta `views`.
-- [x] Crear carpeta `routes`.
-- [x] Crear carpeta `middlewares`.
-- [x] Crear carpeta `db`.
-- [x] Crear carpeta `models`.
-- [x] Crear `public/css/style.css`.
-- [x] Crear `public/js/sse-client.js`.
-- [x] Crear `views/layouts/main.ejs`.
-- [x] Crear `views/admin/dashboard.ejs`.
-- [x] Crear `views/admin/create_tournament.ejs`.
-- [x] Crear `views/admin/manage_tournament.ejs`.
-- [x] Crear `views/public/live_dashboard.ejs`.
-- [x] Crear `views/auth/login.ejs`.
-- [x] Crear `views/auth/signup.ejs`.
-- [x] Crear `routes/authRoutes.js`.
-- [x] Crear `routes/tournamentRoutes.js`.
-- [x] Crear `routes/apiRoutes.js`.
-- [x] Crear `routes/index.js`.
-- [x] Crear `middlewares/authMiddleware.js`.
-- [x] Crear `middlewares/freemiumMiddleware.js`.
-- [x] Crear `db/database.js`.
-- [x] Crear `db/init.sql`.
-- [x] Crear `models/clubModel.js`.
-- [x] Crear `models/tournamentModel.js`.
-- [x] Crear `models/matchModel.js`.
-- [x] Crear `app.js` en la raíz del proyecto.
-- [x] Renombrar `public/index.html` a `views/index.ejs`.
+Un sistema de roles robusto garantiza la seguridad y la segmentación de datos en la arquitectura multi-inquilino.
 
-## 3. Lógica Principal del Servidor (`app.js`)
+| Rol | Identificador en el Sistema | Nivel de Acceso | Capacidades Clave |
+| :--- | :--- | :--- | :--- |
+| **Administrador de Plataforma** | `admin_plataforma` | **Global** | Gestión de todos los clubes, supervisión y métricas de la plataforma. |
+| **Administrador de Club** | `admin_club` | Específico del Club | Creación/gestión de torneos, administración de jugadores y marcadores. |
+| **Jugador** | `jugador` | Específico del Torneo | Inscripción en torneos y visualización del estado de sus competiciones. |
+| **Espectador** | `espectadores` | **Público** | Acceso de solo lectura al "Wallshow" (marcador público en tiempo real). |
 
-- [x] Importar `express`, `express-session` y los módulos de rutas en `app.js`.
-- [x] Configurar el middleware `express.urlencoded`.
-- [x] Configurar el middleware para servir archivos estáticos desde `public`.
-- [x] Configurar EJS como motor de plantillas.
-- [x] Configurar `express-session` con un secreto.
-- [x] Enlazar las rutas de `index.js`.
-- [x] Enlazar las rutas de `authRoutes.js`.
-- [x] Enlazar las rutas de `tournamentRoutes.js`.
-- [x] Enlazar las rutas de `apiRoutes.js`.
-- [x] Enlazar las rutas de `clubRoutes.js`.
-- [x] Definir el puerto (leyendo de `process.env.PORT`) y arrancar el servidor.
-- [x] Configurar i18next (inicialización, middleware, `res.locals.t` y `res.locals.currentLanguage`).
+---
 
-## 3.1. Internacionalización (i18n)
+## 2. ⚙️ Arquitectura del Sistema
 
-- [x] Instalar `i18next`, `i18next-http-middleware` y `i18next-fs-backend`.
-- [x] Crear estructura de directorios `locales/en` y `locales/es` con `translation.json`.
-- [x] Configurar `i18next` en `app.js` (inicialización, middleware, `res.locals.t`).
-- [x] Añadir ruta `/lang/:lng` en `routes/index.js` para cambio de idioma.
-- [x] Adaptar `public/index.ejs` para usar `t()` y selector de idioma.
-- [x] Actualizar archivos de traducción con nuevas claves (`features`, `plans`, `contact`).
+PadelFlow implementa un patrón **Model-View-Controller (MVC)** sobre **Express.js**, asegurando una separación lógica de responsabilidades.
 
-## 3.2. Rutas Básicas y Vistas
+### 2.1. Visión General y Flujo de Petición
 
-- [x] Modificar la ruta principal (`/`) en `routes/index.js` para renderizar `public/index.ejs`.
-- [x] Crear rutas básicas en `routes/authRoutes.js` para `GET /login` y `GET /signup`.
+El flujo estructurado de una petición HTTP garantiza un procesamiento predecible y robusto:
 
-## 4. Base de Datos SQLite (`db/` y `models/`)
+`Cliente` ➡️ `Capa de Rutas (Routes)` ➡️ `Pipeline de Middleware` ➡️ `Controladores` ➡️ `Modelos` ➡️ `Base de Datos (SQLite)`
 
-- [x] **`db/init.sql`**: Escribir las sentencias `CREATE TABLE` para `Clubs`, `Torneos`, `Jugadores` y `Partidos`.
-- [x] **`db/database.js`**:
-    - [x] Importar `sqlite3`.
-    - [x] Crear la función `initDatabase()` que se conecte a la base de datos.
-    - [x] Dentro de `initDatabase()`, leer el archivo `init.sql`.
-    - [x] Ejecutar las sentencias SQL de `init.sql`.
-    - [x] Exportar la instancia de la base de datos.
-    - [x] Implementar la comprobación y creación del administrador por defecto.
-- [x] **`models/clubModel.js`**:
-    - [x] Crear función `crearClub` (INSERT).
-    - [x] Crear función `encontrarPorEmail` (SELECT).
-- [x] **`models/tournamentModel.js`**: Implementar funciones CRUD para torneos.
-- [x] **`models/matchModel.js`**: Implementar funciones CRUD para partidos.
-- [x] **`models/playerModel.js`**: Implementar funciones CRUD para jugadores.
-- [x] **`models/userModel.js`**: Implementar funciones CRUD para usuarios (plataforma, club, jugadores).
+### 2.2. Núcleo de la Aplicación (`app.js`)
 
-## 5. Lógica de Autenticación y Middlewares (hasta finalizar funcionalidades)
+El fichero **`app.js`** es el **orquestador principal**, encargado de la inicialización secuencial de todos los componentes antes del arranque del servidor HTTP:
 
-- [x] **`routes/authRoutes.js`**:
-    - [x] `GET /signup`: Renderizar la vista `signup.ejs`.
-    - [x] `GET /login`: Renderizar la vista `login.ejs`.
-    - [x] `POST /signup`:
-        - [x] Hashear la contraseña con `bcrypt.hash()`.
-        - [x] Permitir el registro como 'club_admin' (creando club) o 'platform_admin' (sin club).
-        - [x] Validar que 'clubName' se proporcione si el tipo de usuario es 'club_admin'.
-        - [x] Redirigir a `/login`.
-    - [x] `POST /login`:
-        - [x] Buscar club por email.
-        - [x] Comparar contraseña con `bcrypt.compare()`.
-        - [x] Si es válido, guardar `userId` en `req.session`.
-        - [x] Redirigir a `/dashboard`.
-    - [x] `POST /player/signup`: Implementar ruta para el registro de jugadores.
-- [x] **`middlewares/authMiddleware.js`**:
-    - [x] Crear la función `isAuthenticated`.
-    - [x] Verificar si `req.session.userId` existe.
-    - [x] Si no existe, redirigir a `/login`.
-- [x] **`middlewares/freemiumMiddleware.js`**:
-    - [x] Crear la función `checkFreemium`.
-    - [ ] Obtener el `clubId` de la sesión.
-    - [ ] Contar los torneos activos del club.
-    - [ ] Si es freemium y tiene 3 o más torneos, redirigir con error.
+1. **Inicialización** de Express.js.
+2. **Configuración** de Middleware.
+3. **Internacionalización** (i18next).
+4. **Gestión de Sesiones** (express-session).
+5. **Motor de Vistas** (EJS).
+6. **Registro** de Módulos de Rutas.
+7. **Inicialización de la Base de Datos** (`initDatabase()`).
+8. **Arranque** del Servidor HTTP.
 
-## 6. Lógica de Gestión de Torneos y API en Tiempo Real
+### 2.3. Pipeline de Middleware
 
-- [x] **`routes/tournamentRoutes.js`**:
-    - [x] Aplicar el middleware `isAuthenticated` a todas las rutas del archivo.
-    - [x] `GET /dashboard`: Renderizar el dashboard del administrador.
-    - [x] `GET /tournaments/create`: Aplicar `checkFreemium` y renderizar el formulario.
-    - [x] `POST /tournaments/create`: Procesar la creación del torneo.
-- [x] **`routes/apiRoutes.js`**:
-    - [x] Crear un objeto `clients = {}` para manejar las conexiones SSE.
-    - [x] `GET /api/events/:id`:
-        - [x] Configurar los headers para SSE.
-        - [x] Diferenciar entre clientes (público vs. admin) y almacenar la conexión.
-        - [x] Manejar el evento `close` para eliminar al cliente.
-    - [x] `POST /api/tournaments/:id/score`: (Ruta de Admin) Actualizar el marcador en la BD y notificar a todos los clientes.
-    - [x] `POST /api/tournaments/:id/suggest-score`: (Ruta Pública) Recibir sugerencia y notificar solo al admin.
-- [x] **`public/js/sse-client.js`**:
-    - [x] Crear una instancia de `EventSource`.
-    - [x] `source.onmessage`: Procesar los datos de puntuación y actualizar el DOM.
-    - [x] Implementar la lógica para enviar sugerencias de puntuación al servidor.
+El pipeline es la columna vertebral del procesamiento, preparando el contexto necesario para los controladores:
 
-## 7. Diseño y Contenido de las Vistas (`.ejs`)
+| Middleware | Propósito |
+| :--- | :--- |
+| `express.urlencoded()`, `express.json()` | Parseo de los cuerpos (`req.body`) de las peticiones entrantes. |
+| `express.static('public')` | Servir ficheros estáticos (CSS, JS, imágenes). |
+| `i18nextMiddleware.handle(i18next)` | Detección de idioma y carga de traducciones. |
+| `session()` | Persistencia del estado del usuario mediante cookies. |
+| `Middleware Personalizado (res.locals)` | Exposición de la función de traducción (`req.t`) y otras variables a las plantillas EJS. |
 
-- [x] **`views/layouts/main.ejs`**: Crear la plantilla base con `head`, `body`, etc.
-- [x] **`views/auth/signup.ejs`**: Crear formulario de registro.
-- [x] **`views/auth/login.ejs`**: Crear formulario de inicio de sesión.
-- [x] **`views/admin/dashboard.ejs`**: Diseñar la lista de torneos y el botón de creación.
-- [x] **`views/club/dashboard.ejs`**: Clonar y adaptar el dashboard de admin plataforma para el admin de club.
-- [x] **`views/admin/create_tournament.ejs`**: Crear el formulario de creación de torneos.
-- [x] **`views/club/create_player.ejs`**: Crear formulario de registro de jugador para el admin del club.
-- [x] **`views/club/players.ejs`**: Mostrar la lista de jugadores del club.
-- [x] **`views/club/add_player_to_tournament.ejs`**: Formulario para añadir jugadores a un torneo.
-- [ ] **`views/admin/manage_tournament.ejs`**: Añadir UI para recibir y gestionar sugerencias de puntuación.
-- [ ] **`views/public/live_dashboard.ejs`**: 
-    - [ ] Diseñar la vista pública con el cuadro de partidos y marcadores.
-    - [ ] Añadir UI para que los espectadores puedan enviar sugerencias de puntuación.
+### 2.4. Arquitectura de Enrutamiento Modular
 
-## 8. Despliegue y Mantenimiento
+La estrategia de enrutamiento separa las rutas en módulos dedicados para mejorar la organización y facilitar la aplicación de middleware de autorización.
 
-- [ ] Crear el archivo `.env`.
-- [ ] Añadir variables de entorno (`PORT`, `SESSION_SECRET`) a `.env`.
-- [ ] Modificar `app.js` para usar las variables de `.env` (requiere `dotenv`).
-- [ ] **Pruebas Funcionales**:
-    - [ ] Probar el registro de un nuevo club.
-    - [ ] Probar el inicio de sesión.
-    - [ ] Probar la creación de un torneo (límite freemium).
-    - [ ] Probar la visualización del dashboard en vivo.
-    - [ ] Probar la actualización de un marcador y verificar la actualización en tiempo real.
-- [ ] Subir el proyecto a un servicio de hosting (ej. Heroku, Railway).
-- [ ] Configurar las variables de entorno en el servicio de hosting.
-- [ ] Verificar que la aplicación funcione en producción.
+| Módulo de Ruta | Punto de Montaje | Propósito Principal |
+| :--- | :--- | :--- |
+| `indexRouter` | `/` | Rutas públicas (ej. página de inicio). |
+| `authRouter` | `/` | Endpoints de autenticación (login, signup, logout). |
+| `adminRouter` | `/admin` | Funcionalidades para el **Administrador de Plataforma**. |
+| `clubRouter` | `/club` | Gestión de club para el **Administrador de Club**. |
+| `apiRouter` | `/` | Endpoints de la API (incluye funcionalidades en tiempo real). |
 
-## Funcionalidades del Administrador de plaforma
-- [x] **Formulario para crear un club**
-- [ ] **Gestion de administradores de club**
-    - [ ] Acceso desde el dashboard para crear un administrador de club
-    - [ ] Vincular un usuario para ser un administrador de club
+---
 
+## 3. 🎯 Características Clave
 
-## Funcionalidades del Administrador de Club
+### 3.2. 🏆 Sistema de Gestión de Torneos
 
-- [x] **preparacion de las paginas principales del administrador de club**
-- [x] **Registro de usuario administrado:**
-    - [x] Crear formulario de registro para usuario.
-    - [x] Ser rediccionado al dashboard.
-- [x] **Creación de Torneos:**
-    - [x] Permitir al administrador del club crear nuevos torneos desde su dashboard.
-    - [x] Formulario de creación con campos como: nombre, tipo de torneo, fechas, número de jugadores, etc.
-- [x] **Gestión de Jugadores:**
-    - [x] Permitir al administrador crear jugadores.
-    - [x] Permitir al administrador añadir jugadores a un torneo.
-    - [ ] Permitir al administrador modificar los datos de los jugadores inscritos.
-    - [ ] Permitir a los usuarios (jugadores) inscribirse a torneos abiertos.
-    ### Gestión de Torneos
-    - [ ] **Lógica de Tipos de Torneo:**
-        - [ ] **Round Robin (Liguilla):**
-            - [ ] Generar automáticamente los enfrentamientos.
-            - [ ] Registrar resultados de los partidos.
-            - [ ] Calcular la tabla de posiciones.
-            - [ ] Determinar al ganador basado en la puntuación.
-        - [ ] **Eliminatoria Directa:**
-            - [ ] Generar el cuadro de enfrentamientos (bracket).
-            - [ ] Registrar los resultados de cada ronda.
-            - [ ] Avanzar a los ganadores a la siguiente ronda.
-            - [ ] Determinar al campeón.
-        - [ ] **Liga:**
-            - [ ] Similar a Round Robin pero con partidos de ida y vuelta.
-            - [ ] Implementar la lógica de puntuación y clasificación.
-        - [ ] **Americana Clásica:**
-            - [ ] Implementar la lógica de rotación de parejas.
-            - [ ] Calcular la clasificación individual.
-            - [ ] Determinar al ganador.
-### Wallshow (Visualización en Vivo)
-- [ ] **Integración con Torneos:**
-    - [ ] Mostrar los cuadros y resultados de los torneos en el wallshow en tiempo real.
-    - [ ] Actualizar automáticamente los enfrentamientos a medida que avanzan los torneos.
-    - [ ] Mostrar información del partido en curso (jugadores, puntuación).
-- [ ] **Anuncio de Ganadores:**
-    - [ ] Mostrar una vista especial en el wallshow para anunciar a los ganadores/campeones del torneo.
+El sistema maneja el ciclo de vida completo de un torneo y soporta múltiples formatos de competición:
 
+| Formato de Torneo | Estado de Implementación | Lógica |
+| :--- | :--- | :--- |
+| **Round Robin (Liguilla)** | Implementado **parcialmente**. | Todos se enfrentan entre sí. |
+| **Single Elimination (Eliminatoria Directa)** | Implementado **parcialmente**. | Cuadro de eliminación directa. |
+| **Liga (League)** | **Planeado**. | Competición de larga duración. |
+| **Americana Clásica** | **Planeado**. | Rotación de parejas y puntuación individual. |
 
+### 3.3. ⚡ Funcionalidades en Tiempo Real con SSE
 
-### Autenticación y Dashboard de Usuario
-- [ ] **Registro de Usuario:**
-    - [ ] Crear formulario de registro para usuarios (jugadores).
-    - [ ] Implementar la lógica en el backend para registrar nuevos usuarios.
-- [ ] **Inicio de Sesión de Usuario:**
-    - [ ] Crear formulario de inicio de sesión para usuarios.
-    - [ ] Implementar la lógica en el backend para autenticar usuarios.
-- [ ] **Dashboard de Usuario:**
-    - [ ] Crear una vista de dashboard específica para el usuario (`views/user/dashboard.ejs`).
-    - [ ] Al iniciar sesión, redirigir al usuario a su dashboard.
-    - [ ] Mostrar información relevante para el usuario (torneos inscritos, próximos partidos, etc.).
+Se utiliza **Server-Sent Events (SSE)** para proporcionar actualizaciones en vivo, creando una experiencia dinámica para espectadores y administradores ("Wallshow").
+
+| Acción | Endpoint | Resultado |
+| :--- | :--- | :--- |
+| **Conexión** | `/api/events/:id` | El cliente establece una conexión persistente para recibir eventos. |
+| **Actualización de Marcador (Admin)** | `POST /api/tournaments/:id/score` | Modifica DB y dispara un evento SSE a **todos** los clientes conectados. |
+| **Sugerencia de Marcador (Público)** | `POST /api/tournaments/:id/suggest-score` | **No** modifica DB; envía notificación SSE solo a **Administradores** conectados. |
+
+### 3.4. 🔒 Sistema de Autenticación y Control de Acceso
+
+- **Autenticación:** Basada en **sesiones** gestionadas por `express-session`. Las contraseñas se protegen con **bcrypt**.
+- **Autorización (Middlewares):**
+    - `isAuthenticated`: Verifica que el usuario haya iniciado sesión.
+    - `checkFreemium`: Aplica la limitación de **tres torneos activos** para clubes no premium.
+
+### 3.5. 🌍 Internacionalización (`i18next`)
+
+El sistema soporta múltiples idiomas para una audiencia global:
+
+- **Configuración:** Ficheros JSON organizados en `./locales/{{lng}}/translation.json`.
+- **Idiomas Soportados:** **Inglés (`en`)** y **Español (`es`)**. El inglés es el idioma de respaldo (*fallback*).
+- **Integración:** La función de traducción (`t()`) se expone directamente a las plantillas **EJS**.
+
+---
+
+## 4. 🗃️ Capa de Datos y Persistencia
+
+### 4.1. Arquitectura de la Base de Datos
+
+La plataforma utiliza **SQLite** por su simplicidad, portabilidad y bajo requerimiento de configuración. La herramienta gráfica **DB Browser for SQLite** facilita la gestión del esquema y la manipulación de datos.
+
+### 4.3. Extensiones de la Base de Datos
+
+Para ampliar las capacidades nativas de SQLite y soportar la lógica de negocio compleja, se integran librerías dinámicas (`.dll`):
+
+- **`math.dll`**: Proporciona funciones matemáticas (Trigonométricas, Estadísticas, Aritméticas) esenciales para la lógica de torneos y análisis de rendimiento.
+- **`formats.dll`**: Utilidades para serialización y conversión de datos (ej. Base64, Property List).
+- **`sqlean.dll`**: Fuente adicional de funciones de utilidad SQL.
+
+### 4.4. Esquema de la Base de Datos y Relaciones
+
+El esquema está diseñado para el modelo multi-inquilino y la gestión de torneos:
+
+- **`Clubs`**: Entidad central multi-inquilino.
+- **`Users`**: Cuentas de usuario con rol (`user_type` se vincula a la jerarquía de roles).
+- **`Torneos`**: Eventos creados por un club, con tipo (Liguilla, Eliminatoria) y estado.
+- **`Jugadores (Players)`**: Participantes vinculados a un club y torneos.
+- **`Partidos (Matches)`**: Enfrentamientos individuales, almacenando marcador y estado.
+
+---
+
+## 5. 💻 Configuración y Entorno de Desarrollo
+
+El entorno está estandarizado para la eficiencia y la colaboración:
+
+| Componente | Configuración | Propósito |
+| :--- | :--- | :--- |
+| **IDE** | Visual Studio Code (`PadelFlow.code-workspace`) | Entorno de desarrollo recomendado y configurado. |
+| **Depuración** | `.vscode/launch.json` | Configuración para iniciar y depurar `app.js` con puntos de interrupción, ignorando ficheros internos de Node.js (`skipFiles`). |
+| **Control de Versiones** | `.gitignore` | Excluye dependencias (`node_modules/`), logs, cachés y ficheros sensibles (`.env`), manteniendo `.env.example` como plantilla. |
+
+---
+
+## 6. 🔗 Integraciones y Licenciamiento
+
+### 6.1. Integración con Google Docs
+
+Una integración programática enlaza la documentación externa a través del fichero de metadatos **`PadelFlow.gdoc`** (formato JSON), que contiene el `doc_id` y el `email` de la cuenta asociada.
+
+### 6.2. 📜 Licenciamiento del Proyecto
+
+PadelFlow se distribuye bajo la **Licencia Apache 2.0**, una licencia de código abierto **permisiva**:
+
+- ✅ Permite uso, modificación y distribución para fines comerciales y privados (sin royalties).
+- ⚠️ Requiere la conservación de los avisos de **copyright** y de la **propia licencia**.
+- 🚫 Ofrece el software **"TAL CUAL" (AS IS)**, limitando la responsabilidad de los contribuidores.

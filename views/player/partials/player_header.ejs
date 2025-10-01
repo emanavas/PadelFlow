@@ -1,4 +1,4 @@
-<header class="topbar navbar bg-white border-bottom sticky-top p-3">
+<header class="topbar navbar sticky-top p-3 player-topbar">
     <div class="container-fluid d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center gap-3">
@@ -51,5 +51,22 @@ document.addEventListener('DOMContentLoaded', function () {
             adminShell.classList.toggle('sidebar-toggled');
         });
     }
+
+    // Hide header on scroll down, show on scroll up
+    let lastScrollTop = 0;
+    const header = document.querySelector('.topbar');
+    header.style.transition = 'top 0.3s ease-in-out';
+
+    window.addEventListener('scroll', function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > lastScrollTop) {
+            // Downscroll
+            header.style.top = '-100px'; // Adjust this value to hide the header completely
+        } else {
+            // Upscroll
+            header.style.top = '0';
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
+    });
 });
 </script>

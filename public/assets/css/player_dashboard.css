@@ -23,3 +23,26 @@
         margin-left: 250px; /* Same as sidebar width */
     }
 }
+
+.player-topbar {
+    background: linear-gradient(45deg, #3c3e41, #202020);
+    color: #ffffff;
+}
+
+.player-topbar .navbar-brand,
+.player-topbar .nav-link,
+.player-topbar .dropdown-item {
+    color: #ffffff !important;
+}
+
+.player-topbar .dropdown-menu {
+    background-color: #5a5c5e;
+}
+
+.player-topbar .dropdown-item:hover {
+    background-color: #26394e;
+}
+
+.player-topbar .text-muted {
+    color: #e0e0e0 !important;
+}
